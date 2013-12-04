@@ -24,9 +24,10 @@ facts_given = 0 # counter to keep track of which facts were given
 
 # nouns knowledge base format is a list of a list.  Inner list is of
 # the form [singular, plural]. I.E [[person, people], [foot, feet] ...]
-nouns = [['dog', 'dogs'], ['animal', 'dogs'], ['cat', 'cats'],
-         ['mammal', 'mammals'], ['student', 'students'], ['human', 'humans']
-         ['fox', 'foxes'], ['musician', 'musicians']]
+nouns = [['dog', 'dogs'], ['animal', 'dogs'],
+['cat', 'cats'],['mammal', 'mammals'], 
+['student','students'], ['human', 'humans'],
+['fox', 'foxes'], ['musician', 'musicians']]
 
 # adjective knowledge base
 adjectives = []
@@ -75,7 +76,7 @@ def convert(nounList, inType):
     elif inType == 'P':
         index = 0
         check = 1
-    else
+    else: 
         print("error, parameter 2 incorrect format")
         sys.exit()
     # list to return
@@ -232,8 +233,10 @@ def addFact(subClass, superClass):
                 added = True
                 # if fact is known, then give new fact or query
                 if random.randint(0,1):
+                    print("give the next fact")
                     # give the next fact
                 else:
+                    print("give query")
                     # give query
             else:
                 added = True
@@ -243,6 +246,7 @@ def addFact(subClass, superClass):
                 # give related query (who question related to super class)
     # if the subClass was not found as the starting as the "key" add to KB
     if not added:
+        print("add to KB")
         # add to KB
         # check whether superClass is a noun/adjective
         # switch to subclass to plural
