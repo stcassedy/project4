@@ -22,50 +22,10 @@ import random
 output = 0
 facts_given = 0 # counter to keep track of which facts were given
 
-# nouns knowledge base format is a list of a list.  Inner list is of
-# the form [singular, plural]. I.E [[person, people], [foot, feet] ...]
-nouns = [['dog', 'dogs'], ['animal', 'dogs'],
-['cat', 'cats'],['mammal', 'mammals'], 
-['student','students'], ['human', 'humans'],
-['fox', 'foxes'], ['musician', 'musicians']]
-
-# adjective knowledge base
-adjectives = []
-
 # questions already asked
 askedWhoQ=[]
 askedIsQ= []
 
-# knowledge base
-fs = dict()
-
-'''
-# all individual's name
-individual = [ ['fido', ''], 'nelly','sally','john', 'kate','mimi','fluffy',
-              'lulu','kevin']
-#all category's name
-category = ['dog','animal','cat', 'mammal','student','human','fox','musician']
-
-#individual facts
-fs['fido'] = ['dog','animal']
-fs['nelly'] = ['cat', 'mammal', 'animal']
-fs['sally'] = ['student','human']
-fs['john'] = ['student', 'human']
-fs['kate'] = ['fox', 'animal']
-fs['mimi'] = ['fox','animal']
-fs['fluffy'] = ['cat','mammal','animal']
-fs['lulu'] = ['cat', 'mammal', 'animal']
-fs['kevin'] = ['musician', 'human']
-
-#general facts
-fs['dog'] = ['animal']
-fs['cat'] = ['mammal']
-fs['mammal'] = ['animal']
-fs['student'] = ['human'] 
-fs['fox'] = ['animal']
-fs['musician']= ['human']
-
-'''
 
 ################################################################################
 '''
@@ -95,14 +55,15 @@ The initial KB info is from my last project and open for change.
 #                     Creates Lists and KB for Program
 
 #list of possible names
-Names = ['Steve','Gandalf','Chewbacca','Daxter','Fido','Nelly']
+individual = ['Steve','Gandalf','Chewbacca','Daxter','Fido','Nelly']
 
 #list of possible things
-Categories = ['human','animal','wizard','wookie','ottsel',
+category = ['human','animal','wizard','wookie','ottsel',
           'alien','mammal','idiot','dog','cat']
 
-#list of plurals
-Plurals = [['human','humans'],['animal','animals'],['wizard','wizards'],
+# nouns knowledge base format is a list of a list.  Inner list is of
+# the form [singular, plural]. I.E [[person, people], [foot, feet] ...]
+nouns = [['human','humans'],['animal','animals'],['wizard','wizards'],
            ['wookie','wookies'],['ottsel','ottsels'],['alien','aliens'],
            ['mammal','mammals'],['idiot','idiots'],['dog','dogs'],
            ['cat','cats']]
@@ -139,6 +100,11 @@ KB['wizard'] = [[],[],[],[],[]]
 KB['idiot'] = [[],[],[],[],[]]
 KB['animal'] = [[],[],[],[],[]]
 
+
+
+
+
+
 ###############################################################################
 #                        Functions for Updating the KB
 
@@ -146,22 +112,22 @@ def update_names(name):
     '''
     appends new name to names list
     '''
-    if Names.count(name) == 0:
-        Names.append(name)
+    if individual.count(name) == 0:
+        individual.append(name)
 
 def update_categories(thing):
     '''
     appends new thing to things list
     '''
-    if Categories.count(thing) == 0:
-        Categories.append(thing)
+    if category.count(thing) == 0:
+        category.append(thing)
 
 def update_plurals(single,plural):
     '''
     appends new item to the plural list
     '''
-    if Plurals.count([single,plural]) == 0:
-        Plurals.append([single,plural])
+    if nouns.count([single,plural]) == 0:
+        nouns.append([single,plural])
 
 def update_adjectives(adj):
     '''
@@ -300,13 +266,13 @@ def update_KB_poss(thing,poss):
     if not (thing in KB):
         KB[thing] = [[],[],[],[],[poss]]
 
+
+
+
+
 ###############################################################################
 
-#knowledge base to ask back
-facts = ['fido is an animal','nelly is a cat',
-         'sally is a student','a dog is an animal',
-         'kevin is a musician','lulu is a cat',
-         'cats are fluffy','animals are mammals']
+
 
 # ------------------------------------------------------------------------------
 # General all purpose helper functions that help with all functions.
