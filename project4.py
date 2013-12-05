@@ -66,6 +66,242 @@ fs['fox'] = ['animal']
 fs['musician']= ['human']
 
 '''
+
+################################################################################
+'''
+How the KB works so far:
+
+The knowledge base currently can handle verbs, adjectives, and prepositions.
+
+I did not create lists for "not" something. I figure that we can save
+information in the KB as "not human", "not animal", etc.
+
+It is easy in python to parse strings so checking for "not" wouldn't be
+difficult. We can do this differently if we choose to do so.
+
+For adverbs, I think it would be easiest to save them with their respective
+verbs, so a sample verb is "moved quickly".
+
+I am not sure the best way to handle prepositions or possessions yet. I made
+space for them in the KB for the mean time.
+
+The lists for possible options should be useful for generating questions.
+
+The initial KB info is from my last project and open for change.
+
+'''
+
+###############################################################################
+#                     Creates Lists and KB for Program
+
+#list of possible names
+Names = ['Steve','Gandalf','Chewbacca','Daxter','Fido','Nelly']
+
+#list of possible things
+Categories = ['human','animal','wizard','wookie','ottsel',
+          'alien','mammal','idiot','dog','cat']
+
+#list of plurals
+Plurals = [['human','humans'],['animal','animals'],['wizard','wizards'],
+           ['wookie','wookies'],['ottsel','ottsels'],['alien','aliens'],
+           ['mammal','mammals'],['idiot','idiots'],['dog','dogs'],
+           ['cat','cats']]
+
+#list of adjectives
+Adjectives = []
+
+#list of possible verbs
+Verbs = []
+
+#list of possible verbs
+Adverbs = []
+
+#list of possible prepositions
+Prepositions = []
+
+#list of the knowledge base
+#[thing,list of what thing is,list of what is not]
+KB = {}
+KB['Steve'] = [['human','idiot','animal','mammal'],[],[],[],[]]
+KB['Gandalf'] = [['wizard'],[],[],[],[]]
+KB['Chewbacca'] = [['wookie','alien','animal'],[],[],[],[]]
+KB['Daxter'] = [['ottsel','idiot','mammal','animal'],[],[],[],[]]
+KB['Nelly'] = [['cat','animal','mammal'],[],[],[],[]]
+KB['Fido'] = [['dog','animal'],[],[],[],[]]
+KB['human'] = [['animal','mammal'],[],[],[],[]]
+KB['ottsel'] = [['animal','mammal'],[],[],[],[]]
+KB['cat'] = [['animal','mammal'],[],[],[],[]]
+KB['dog'] = [['animal'],[],[],[],[]]
+KB['wookie'] = [['animal','alien'],[],[],[],[]]
+KB['alien'] = [['animal'],[],[],[],[]]
+KB['mammal'] = [['animal'],[],[],[],[]]
+KB['wizard'] = [[],[],[],[],[]]
+KB['idiot'] = [[],[],[],[],[]]
+KB['animal'] = [[],[],[],[],[]]
+
+###############################################################################
+#                        Functions for Updating the KB
+
+def update_names(name):
+    '''
+    appends new name to names list
+    '''
+    if Names.count(name) == 0:
+        Names.append(name)
+
+def update_categories(thing):
+    '''
+    appends new thing to things list
+    '''
+    if Categories.count(thing) == 0:
+        Categories.append(thing)
+
+def update_plurals(single,plural):
+    '''
+    appends new item to the plural list
+    '''
+    if Plurals.count([single,plural]) == 0:
+        Plurals.append([single,plural])
+
+def update_adjectives(adj):
+    '''
+    appends new adjective to adjectives list
+    '''
+    if Adjectives.count(adj) == 0:
+        Adjectives.append(adj)
+
+def update_verbs(verb):
+    '''
+    appends new verb to verbs list
+    '''
+    if Verbs.count(verb) == 0:
+        Verbs.append(verb)
+
+def update_adverbs(adv):
+    '''
+    appends new adverb to adverbs list
+    '''
+    if Adverbs.count(adv) == 0:
+        Adverbs.append(adv)
+
+def update_prepositions(prep):
+    '''
+    appends new perpositions to prepositions list
+    '''
+    if Prepositions.count(prep) == 0:
+        Prepositions.append(prep)
+
+def append_sublist(sublist,original_list):
+    '''
+    appends a sublist to another list (no repeats)
+    '''
+    for i in sublist:
+        if original_list.count(i) == 0:
+            original_list.append(i)
+
+def update_KB_is(thing, what_thing_is):
+    '''
+    updates the knowledge base when thing is what_thing_is
+    
+    '''
+    #gets sublist of what_thing_is
+    found_thing = False
+    sublist_is = []
+    sublist_adj = []
+    sublist_verb = []
+    sublist_prep = []
+    sublist_poss = []
+    if what_thing_is in KB:
+        sublist_is = KB.get(what_thing_is)[0]
+        sublist_adj = KB.get(what_thing_is)[1]
+        sublist_verb = KB.get(what_thing_is)[2]
+        sublist_prep = KB.get(what_thing_is)[3]
+        sublist_poss = KB.get(what_thing_is)[4]
+            
+    #adds new item to KB
+    if not (thing in KB):
+        KB[thing] = [[thing],[],[],[],[]]
+    
+    #appends related information with new information
+    for key in KB.keys():
+        if key == thing and KB.get(key)[0].count(what_thing_is) == 0:
+            KB.get(key)[0].append(what_thing_is)
+            append_sublist(sublist_is,KB.get(key)[0])
+            append_sublist(sublist_adj,KB.get(key)[1])
+            append_sublist(sublist_verb,KB.get(key)[2])
+            append_sublist(sublist_prep,KB.get(key)[3])
+            append_sublist(sublist_poss,KB.get(key)[4])
+        if KB.get(key)[0].count(thing) > 0:
+            print(KB.get(key)[0])
+            KB.get(key)[0].append(what_thing_is)
+            append_sublist(sublist_is,KB.get(key)[0])
+            append_sublist(sublist_adj,KB.get(key)[1])
+            append_sublist(sublist_verb,KB.get(key)[2])
+            append_sublist(sublist_prep,KB.get(key)[3])
+            append_sublist(sublist_poss,KB.get(key)[4])
+
+def update_KB_adj(thing,adj):
+    '''
+    adds adjectives to KB
+    '''
+    #adds adj to thing and everything that is a thing
+    for key in KB.keys():
+        if key == thing and KB.get(key)[1].count(adj) == 0:
+            KB.get(key)[1].append(adj)
+        if KB.get(key)[0].count(thing) > 0 and KB.get(key)[1].count(adj) == 0:
+            KB.get(key)[1].append(adj)
+
+    #adds thing if new to KB
+    if not (thing in KB):
+        KB[thing] = [[],[adj],[],[],[]]
+
+def update_KB_verb(thing,verb):
+    '''
+    adds verbs to KB
+    '''
+    #adds verb to thing and everything that is a thing
+    for key in KB.keys():
+        if key == thing and KB.get(key)[2].count(verb) == 0:
+            KB.get(key)[2].append(verb)
+        if KB.get(key)[0].count(thing) > 0 and KB.get(key)[2].count(verb) == 0:
+            KB.get(key)[2].append(verb)
+
+    #adds thing if new to KB
+    if not (thing in KB):
+        KB[thing] = [[],[],[verb],[],[]]
+
+def update_KB_prep(thing,prep):
+    '''
+    adds prepositions to KB
+    '''
+    #adds prep to thing and everything that is a thing
+    for key in KB.keys():
+        if key == thing and KB.get(key)[3].count(prep) == 0:
+            KB.get(key)[3].append(prep)
+        if KB.get(key)[0].count(thing) > 0 and KB.get(key)[3].count(prep) == 0:
+            KB.get(key)[3].append(prep)
+
+    #adds thing if new to KB
+    if not (thing in KB):
+        KB[thing] = [[],[],[],[prep],[]]
+
+def update_KB_poss(thing,poss):
+    '''
+    adds possessions to KB
+    '''
+    #adds poss to thing and everything that is a thing
+    for key in KB.keys():
+        if key == thing and KB.get(key)[4].count(poss) == 0:
+            KB.get(key)[4].append(poss)
+        if KB.get(key)[0].count(thing) > 0 and KB.get(key)[4].count(poss) == 0:
+            KB.get(key)[4].append(poss)
+
+    #adds thing if new to KB
+    if not (thing in KB):
+        KB[thing] = [[],[],[],[],[poss]]
+
+###############################################################################
+
 #knowledge base to ask back
 facts = ['fido is an animal','nelly is a cat',
          'sally is a student','a dog is an animal',
