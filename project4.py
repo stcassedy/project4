@@ -24,9 +24,10 @@ facts_given = 0 # counter to keep track of which facts were given
 
 # nouns knowledge base format is a list of a list.  Inner list is of
 # the form [singular, plural]. I.E [[person, people], [foot, feet] ...]
-nouns = [['dog', 'dogs'], ['animal', 'dogs'], ['cat', 'cats'],
-         ['mammal', 'mammals'], ['student', 'students'], ['human', 'humans']
-         ['fox', 'foxes'], ['musician', 'musicians']]
+nouns = [['dog', 'dogs'], ['animal', 'dogs'],
+['cat', 'cats'],['mammal', 'mammals'], 
+['student','students'], ['human', 'humans'],
+['fox', 'foxes'], ['musician', 'musicians']]
 
 # adjective knowledge base
 adjectives = []
@@ -36,7 +37,9 @@ askedWhoQ=[]
 askedIsQ= []
 
 # knowledge base
-fs = collections.OrderedDict()
+fs = dict()
+
+'''
 # all individual's name
 individual = [ ['fido', ''], 'nelly','sally','john', 'kate','mimi','fluffy',
               'lulu','kevin']
@@ -62,6 +65,13 @@ fs['student'] = ['human']
 fs['fox'] = ['animal']
 fs['musician']= ['human']
 
+'''
+#knowledge base to ask back
+facts = ['fido is an animal','nelly is a cat',
+         'sally is a student','a dog is an animal',
+         'kevin is a musician','lulu is a cat',
+         'cats are fluffy','animals are mammals']
+
 # ------------------------------------------------------------------------------
 # General all purpose helper functions that help with all functions.
 # ------------------------------------------------------------------------------
@@ -75,7 +85,7 @@ def convert(nounList, inType):
     elif inType == 'P':
         index = 0
         check = 1
-    else
+    else: 
         print("error, parameter 2 incorrect format")
         sys.exit()
     # list to return
@@ -105,7 +115,7 @@ def convert(nounList, inType):
 
 #reply for isQuestion 
 
-def checkIsQuestion(rand_name, word):
+def checkIsQuestion(rand_name, word, a_an):
     check=False
     values=[]
     values= fs.get(rand_name)
@@ -113,13 +123,13 @@ def checkIsQuestion(rand_name, word):
         for ele in values:
             if word == ele:
                 check=True
-                print(rand_name,'is a/an',word,'.')
+                print(rand_name,"is",a_an ,word,'.')
 	# if kb doesn't have the fact, ask a related query
     if (check==False):  
 
     #?????? asked a related questions 
     #print('Thanks, I did not know that myself.') 
-        relatedWhoQuestion(word)
+        relatedWhoQuestion(word, a_an)
 
 ########################################################
 #reply for who question
@@ -195,7 +205,7 @@ def relatedIsQuestion(a_object):
 
 ############related who-questions##########
 
-def relatedWhoQuestion(a_object):  # or adj ??
+def relatedWhoQuestion(a_object, a_an):  # or adj ??
 
 # check whether word is already asked or not
     flag= a_object in askedWhoQ
@@ -203,7 +213,7 @@ def relatedWhoQuestion(a_object):  # or adj ??
     while(flag==True):
         flag= a_object in askedWhoQ
             
-    print('Who is a/an', a_object,'?')
+    print('Who is',a_an, a_object,'?')
     askedWhoQ.append(a_object)
 
 
@@ -227,22 +237,30 @@ def addFact(subClass, superClass):
     # things is everything the person or thing is
     for name, things in fs.items():
         # if found, check if the superclass is attached to the subclass
-        if name == person:
-            if word in things: # is this correct?
+        if name == subClass:
+            if superClass in things: 
                 added = True
                 # if fact is known, then give new fact or query
                 if random.randint(0,1):
-                    # give the next fact
+                    #randomly choose a fact
+                    print(facts.pop(random.randint(0,len(facts)-1)))
                 else:
-                    # give query
+                    #randomly create a query
+                    temp = random.sample( fs.keys(),1)
+                    print("what is "+temp[0]+"?")
             else:
                 added = True
+                temp = fs[subClass]
+                temp.append(superClass)
+                fs[subClass] = temp
+                print("what is the plural of "+ superClass +"?") #temporary
                 # if fact is not known, attach it to the subclass
-                # check whether superClass is a noun/adjective
-                # not sure how to do this
-                # give related query (who question related to super class)
+                # check whether superClass is a noun/adjective, why?
+                # give related query (who question related to superclass)
     # if the subClass was not found as the starting as the "key" add to KB
     if not added:
+        fs[subClass] = superClass.split() #add it as a list
+        print("what is the plural of "+ superClass +"?") #temporary
         # add to KB
         # check whether superClass is a noun/adjective
         # switch to subclass to plural
@@ -279,25 +297,6 @@ def addFactIsA(person, superClass):
 # Main function and helper functions that help parse the input
 # ------------------------------------------------------------------------------
 
-# a helper function that parses an input. This functions returns a list of words
-def parse(line):
-    AI_Input = []
-    # keeps track of indicies for slicing
-    start = 0
-    end = 0
-    # Keeps looking for words until the end of line
-    while end < len(line):
-        if line[end] == ' ':
-            # put this word in list without space
-            AI_Input.append(line[start:end])
-            start = end+1
-            end = start
-        # increment counter
-        end += 1
-    # puts the last word into list without newline character
-    AI_Input.append(line[start:end-1])
-    return AI_Input
-
 # A function that handles inputs of length 4
 def process_input4(AI_Input):
     # if input is of the form who is a/an Y
@@ -311,13 +310,12 @@ def process_input4(AI_Input):
             print("I am confused")
     # if input is of the form X is a/an Y
     elif AI_Input[1] == 'is' and (AI_Input[2] == 'a' or AI_Input[2] == 'an'):
-        print("X is a/an Y")
         # helper function that adds the fact to KB if not known
         addFact(AI_Input[0], AI_Input[3])
     # if input is of the form is X a/an Y
     elif AI_Input[0] == 'is' and (AI_Input[2]== 'a' or AI_Input[2] == 'an'):
-        print("is X a/an Y")
-        checkIsQuestion(AI_Input[1], AI_Input[3])
+        #print("is X a/an Y")
+        checkIsQuestion(AI_Input[1], AI_Input[3], AI_Input[2])
     # print confused if input of length 4 is malformed
     else:
         print("I am confused")
@@ -332,17 +330,13 @@ def process_input3(AI_Input):
         print("are X Ys")
     # if input is of the form X are Y
     elif AI_Input[1] == 'are':
-        print("X are Ys")
+        print("Xs are Ys")
         # Add fact to KB if not known
         addFact(AI_Input[0], AI_Input[2])
     # if input is "I am leaving."
-    elif AI_Input[0] == 'I' and AI_Input[1] == 'am':
-        # need another if statement since there isn't any room on top
-        if AI_Input[2] == 'leaving.':
-            sys.exit() # exit program (Need a better way)
-        # prints confused for inner if statement
-        else:
-            print("I am confused")
+    elif AI_Input[0] == 'I' and AI_Input[1] == 'am' and AI_Input[2] == 'leaving':
+        print("I am leaving")
+        sys.exit() # exit program (Need a better way)
     # print confused for outer if statement
     else:
         print("I am confused")
@@ -365,13 +359,11 @@ def process_input(line):
         should be handled with 'I am confused' """
 
     # parse the line and check what is being asked or told
-    AI_Input = parse(line)
+    AI_Input = line.split()
     length = len(AI_Input)
-    # checks line by length
-    if length == 4:
+    if length == 4:  # checks line by length
         process_input4(AI_Input)
-    # if length of list is 3
-    elif length == 3:
+    elif length == 3:  # if length of list is 3
         process_input3(AI_Input)
     # all other input will be answered with "I am confused"
     else:
@@ -383,7 +375,7 @@ def main():
     
     global output # tells program to use global variable
     # start by give a fact
-    print("sky is a blue") # fact holder
+    print("fido is a dog") # fact holder
     output += 1 # increment output counter
     # process each line from standard input
     for line in sys.stdin:
@@ -396,6 +388,6 @@ def main():
             break
 
 # This executes main() if project4.py was executed at the shell.
-# Otherwise, main() will not be called (useful for debugging).
+# Otherwise, main() will not be called (useful for debugging)..
 if __name__ == "__main__":
     main()
