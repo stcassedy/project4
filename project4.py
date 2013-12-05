@@ -20,7 +20,10 @@ import random
 
 # counter to keep track of how many facts/queries were given
 output = 0
-facts_given = 0 # counter to keep track of which facts were given
+fact_key = 0 # keeps track of which base fact (key) the AI is on
+fact_value = 0 # keeps track of which super fact (value) the AI is on
+flag_confused = False 
+clarify_count = 0 # keeps track of how many attempts were made to clarify
 
 # questions already asked
 askedWhoQ=[]
@@ -493,7 +496,125 @@ def addFactIsA(person, superClass):
 # These functions deal with responses that say "I am confused" or "I am unsure"
 # If another AI remains confused after a few times, the AI should give it
 # a new fact.
+# Note: Might need to fix if previous outputs subjects have more than 1 person
 # ------------------------------------------------------------------------------
+
+# this function attempts to clarify by outputing related another fact
+# when the other AI is confused after hearing a fact. it gives up after 3 tries
+def clarify_confused():
+    global clarify_count
+    # gives a related fact
+    # gives the next thing X is on its list of values
+    values = fs.get(x)
+    y = []
+    # Y's location in the input
+    if len(output) == 3: # X are Y
+        y = output[2]
+    else: # X is a Y
+        y = output[3]
+    # iterate through values of the key
+    for index in range(0, len(values)):
+        # if this was the value (Y) that was given
+        if values[index] == y:
+            # allows us to modify global variables
+            global fact_key
+            global fact_value
+            # if there are more things this object is
+            if index+1 < len(values) # check boundary:
+                #--> requires form changing <--
+                print(output[0] + "are" + values[index+1])             
+                # set new output
+                output = [output[0], 'are', values[index+1]]
+                fact_value += 1
+            # if there are no more things this object is
+            # look for a super class of Y
+            else:
+                # get values for y
+                values2 = fs.get(y)
+                # if there are no super class of Y
+                if values2 = None:
+                    # just give another fact
+                    fact_key += 1
+                    fact_value = 0
+                    giveFact()
+                # give a fact about the super class
+                else:
+                    print(y + "are" + values2[0])
+                    output = [y, 'are', values2[0])
+            break # break out of loop
+    clarify_count += 1 # increment try counter
+
+
+
+# this function attempts to clarify by outputing another related query
+# when the other AI is confused after hearing a fact. it gives up after 3 tries
+def clarify_unsure():
+    # gives us permission to change global variable
+    global clarify_count
+    clarify_count += 1
+    # If other AI is unsure who is a/an X, our AI should answer the question
+    if output[0] == 'who' and output[1] == 'is':
+        # answer the question
+        answer = checkWhoQuestion(output[3])
+        # if no answer was found
+        if answer == None:
+            # give another who question of the super class of X
+            # gets super class of X
+            superClass = fs.get(output[3])
+            # if X has a more general category
+            if superClass != None:
+                relatedWhoQuestion(superClass[0])
+            # else just ask another who question
+            else:
+                # Note: parameter might have to change since WhoQuestion is broken
+                relatedWhoQuestion(output[3])
+        # give answer
+        else:
+            print(answer[0] + " is a " + answer[3])
+            
+    # If other AI is unsure what is X, our AI will answer the question
+    elif output[0] == 'what' and output[1] == 'is':
+        # answer the question
+        answer = checkWhatQuestion(output[3])
+        # if no answer was found
+        if answer == None:
+            # give related question
+            print("ask related question to 'what is X'")
+        # give answer
+        else:
+            print(answer[0] + " is a " + answer[3])
+            
+    # If other AI is unsure if X is a Y
+    elif output[0] == 'is':
+        # answer the question
+        answer = checkIsQuestion(output[1], output[3], output[2])
+        # if no answer was found
+        if answer == None:
+            # give related question
+            print("ask related question to 'is X a Y'")
+        # give answer
+        else:
+            print(answer[0] + " is a " + answer[3])
+            
+    # If other AI is unsure if X are Y's
+    else output[0] == 'are':
+        # answer the question
+        answer = checkAreQuestion(output[1], output[2])
+        # if no answer was found
+        if answer == None:
+            # give related question
+            print("ask related question to 'are X Y'")
+        # give answer
+        else:
+            print(answer[0] + " are " + answer[2])
+
+    
+
+
+
+
+
+
 
 # ------------------------------------------------------------------------------
 # Main function and helper functions that help parse the input
@@ -563,12 +684,45 @@ def process_input(line):
     # parse the line and check what is being asked or told
     AI_Input = line.split()
     length = len(AI_Input)
+    # allows us to change global variables
+    global clarify_count
+    global flag_confused
+    # Note: our process_input is incorrect since subjects can be 2 or more people
     if length == 4:  # checks line by length
+        # resets confused counter in case the other AI was confused
+        # on previous input
+        flag_confused = False
+        clarify_count = 0
+        # process inputs of length 4
         process_input4(AI_Input)
-    elif length == 3:  # if length of list is 3
+    # if input is "I am unsure"
+    elif AI_Input[0] == 'I' and AI_Input[1] == 'am' and AI_Input[2] == 'unsure':
+        if clarify_count == 3:
+            # give up and give another fact
+            giveFact()
+            clarify_count = 0 # reset counter
+        else:
+            clarify_unsure()
+    # if input is "I am confused"
+    elif AI_Input[0] == 'I' and AI_Input[1]== 'am' and AI_Input[2]== 'confused':
+        if clarify_count == 3:
+            # give up and give another fact
+            giveFact()
+            clarify_count = 0 # reset counter
+        else:
+            clarify_confused()
+    # if length of list is 3
+    elif length == 3:
+        # resets confused counter in case the other AI was confused
+        # on previous input
+        flag_confused = False
+        clarify_count = 0
+        # process inputs of length 3
         process_input3(AI_Input)
     # all other input will be answered with "I am confused"
     else:
+        flag_confused = False
+        clarify_counter = 0
         print("I am confused")
 
 # the main function
