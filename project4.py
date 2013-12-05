@@ -25,6 +25,9 @@ fact_value = 0 # keeps track of which super fact (value) the AI is on
 flag_confused = False 
 clarify_count = 0 # keeps track of how many attempts were made to clarify
 
+# remembers the last thing it said to other AI
+prev_output = []
+
 # questions already asked
 askedWhoQ=[]
 askedIsQ= []
@@ -508,10 +511,10 @@ def clarify_confused():
     values = fs.get(x)
     y = []
     # Y's location in the input
-    if len(output) == 3: # X are Y
-        y = output[2]
+    if len(prev_output) == 3: # X are Y
+        y = prev_output[2]
     else: # X is a Y
-        y = output[3]
+        y = prev_output[3]
     # iterate through values of the key
     for index in range(0, len(values)):
         # if this was the value (Y) that was given
@@ -520,11 +523,11 @@ def clarify_confused():
             global fact_key
             global fact_value
             # if there are more things this object is
-            if index+1 < len(values) # check boundary:
+            if index+1 < len(values): # check boundary:
                 #--> requires form changing <--
-                print(output[0] + "are" + values[index+1])             
+                print(prev_output[0] + "are" + values[index+1])             
                 # set new output
-                output = [output[0], 'are', values[index+1]]
+                prev_output = [prev_output[0], 'are', values[index+1]]
                 fact_value += 1
             # if there are no more things this object is
             # look for a super class of Y
@@ -532,7 +535,7 @@ def clarify_confused():
                 # get values for y
                 values2 = fs.get(y)
                 # if there are no super class of Y
-                if values2 = None:
+                if values2 == None:
                     # just give another fact
                     fact_key += 1
                     fact_value = 0
@@ -540,7 +543,8 @@ def clarify_confused():
                 # give a fact about the super class
                 else:
                     print(y + "are" + values2[0])
-                    output = [y, 'are', values2[0])
+                    # update previously given output
+                    prev_output = [y, 'are', values2[0]]
             break # break out of loop
     clarify_count += 1 # increment try counter
 
@@ -553,29 +557,29 @@ def clarify_unsure():
     global clarify_count
     clarify_count += 1
     # If other AI is unsure who is a/an X, our AI should answer the question
-    if output[0] == 'who' and output[1] == 'is':
+    if prev_output[0] == 'who' and prev_output[1] == 'is':
         # answer the question
-        answer = checkWhoQuestion(output[3])
+        answer = checkWhoQuestion(prev_output[3])
         # if no answer was found
         if answer == None:
             # give another who question of the super class of X
             # gets super class of X
-            superClass = fs.get(output[3])
+            superClass = fs.get(prev_output[3])
             # if X has a more general category
             if superClass != None:
                 relatedWhoQuestion(superClass[0])
             # else just ask another who question
             else:
                 # Note: parameter might have to change since WhoQuestion is broken
-                relatedWhoQuestion(output[3])
+                relatedWhoQuestion(prev_output[3])
         # give answer
         else:
             print(answer[0] + " is a " + answer[3])
             
     # If other AI is unsure what is X, our AI will answer the question
-    elif output[0] == 'what' and output[1] == 'is':
+    elif prev_output[0] == 'what' and prev_output[1] == 'is':
         # answer the question
-        answer = checkWhatQuestion(output[3])
+        answer = checkWhatQuestion(prev_output[3])
         # if no answer was found
         if answer == None:
             # give related question
@@ -585,9 +589,9 @@ def clarify_unsure():
             print(answer[0] + " is a " + answer[3])
             
     # If other AI is unsure if X is a Y
-    elif output[0] == 'is':
+    elif prev_output[0] == 'is':
         # answer the question
-        answer = checkIsQuestion(output[1], output[3], output[2])
+        answer = checkIsQuestion(prev_output[1], prev_output[3], prev_output[2])
         # if no answer was found
         if answer == None:
             # give related question
@@ -597,9 +601,9 @@ def clarify_unsure():
             print(answer[0] + " is a " + answer[3])
             
     # If other AI is unsure if X are Y's
-    else output[0] == 'are':
+    elif prev_output[0] == 'are':
         # answer the question
-        answer = checkAreQuestion(output[1], output[2])
+        answer = checkAreQuestion(prev_output[1], prev_output[2])
         # if no answer was found
         if answer == None:
             # give related question
@@ -607,6 +611,9 @@ def clarify_unsure():
         # give answer
         else:
             print(answer[0] + " are " + answer[2])
+    # program should never get here; need to remove later
+    else:
+        print("error, program should not be here")
 
     
 
