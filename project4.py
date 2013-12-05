@@ -388,6 +388,6 @@ def main():
             break
 
 # This executes main() if project4.py was executed at the shell.
-# Otherwise, main() will not be called (useful for debugging).
+# Otherwise, main() will not be called (useful for debugging)..
 if __name__ == "__main__":
     main()
