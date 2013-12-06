@@ -326,7 +326,7 @@ def convert(nounList, inType):
 def checkIsQuestion(rand_name, word, a_an):
     check=False
     values=[]
-    values= fs.get(rand_name)
+    values= KB.get(rand_name)
     if(values is not None):
         for ele in values:
             if word == ele:
@@ -348,7 +348,7 @@ def checkWhoQuestion(word):
     ct=0
     output=''
     correct_answer=[]
-    for name, value in fs.items():
+    for name, value in KB.items():
         if word in value:
             correct_answer.append(name)     
             count+=1
@@ -376,6 +376,69 @@ def checkWhoQuestion(word):
    
 ########################################################
 
+# A function that answers questions of the form "what is X"
+def checkWhatQuestion(aThing):
+    # find X in the keys (X should be a specific thing or person)
+    keys = KB.keys()
+    properties = None
+    # stores the index of the key
+    index = 0
+    # variable to store our response to the what is X question
+    response = []
+    # look for x in the database
+    for index in range(0,len(keys)-1):
+        # if the key is x
+        if keys[index] == aThing:
+            # assigns the properties of x to var values
+            properties = KB[aThing]
+            break
+    # if AI does not know what X is
+    if properties == None:
+        # we can have a 50% chance to say not sure or ask related question
+        # if time permits
+        response = ['I', 'am', 'unsure']
+    else: 
+        # the first list in properties is what X is
+        values = properties[0]
+        # give one of the things that X is that hasn't be given yet
+        xIs = None
+        # if we're giving facts about X, then just give the next fact
+        if index == fact_key:
+            xIs = values[fact_value]
+            # updates global counter
+            global fact_value
+            fact_value += 1
+        # else give the last fact about X
+        else:
+            xIs = values[len(values)-1]
+        # updates previous output
+        response = [aThing, 'is', 'a', xIs]
+    return response
+
+# A function that answers questions of the form "Are X Y"
+def checkAreQuestion(aThing, category):
+    # get key (categories) of KB2
+    keys = KB2.keys()
+    response = []
+    # look for X in the list of keys
+    properties = None
+    for index in range(0, len(keys)-1):
+        if keys[index] == aThing:
+            properties = KB2[aThing]
+    # If X is not in the database
+    if properties == None:
+        # 50% chance to say unsure or give related query/fact
+        response = ['I', 'am', 'unsure']
+    else:
+        # stores list of what X is
+        values = properties[0]
+        # check if X has Y in its property list
+        if category in values:
+            response = [aThing, 'are', category]
+        else:
+            # 50% chance to say unsure or give related query/fact
+            response = ['I', 'am', 'unsure']
+    return response
 
 
 
@@ -443,7 +506,7 @@ def addFact(subClass, superClass):
     added = False # flag to check whether to ask a query at the end
     # Look for the subClass in the KB
     # things is everything the person or thing is
-    for name, things in fs.items():
+    for name, things in KB.items():
         # if found, check if the superclass is attached to the subclass
         if name == subClass:
             if superClass in things: 
@@ -454,20 +517,20 @@ def addFact(subClass, superClass):
                     print(facts.pop(random.randint(0,len(facts)-1)))
                 else:
                     #randomly create a query
-                    temp = random.sample( fs.keys(),1)
+                    temp = random.sample( KB.keys(),1)
                     print("what is "+temp[0]+"?")
             else:
                 added = True
-                temp = fs[subClass]
+                temp = KB[subClass]
                 temp.append(superClass)
-                fs[subClass] = temp
+                KB[subClass] = temp
                 print("what is the plural of "+ superClass +"?") #temporary
                 # if fact is not known, attach it to the subclass
                 # check whether superClass is a noun/adjective, why?
                 # give related query (who question related to superclass)
     # if the subClass was not found as the starting as the "key" add to KB
     if not added:
-        fs[subClass] = superClass.split() #add it as a list
+        KB[subClass] = superClass.split() #add it as a list
         print("what is the plural of "+ superClass +"?") #temporary
         # add to KB
         # check whether superClass is a noun/adjective
@@ -495,6 +558,10 @@ def addFactIsA(person, superClass):
     addFact(person, superClass)
 
 
+
+
+
+
 # ------------------------------------------------------------------------------
 # These functions deal with responses that say "I am confused" or "I am unsure"
 # If another AI remains confused after a few times, the AI should give it
@@ -508,7 +575,7 @@ def clarify_confused():
     global clarify_count
     # gives a related fact
     # gives the next thing X is on its list of values
-    values = fs.get(x)
+    values = KB.get(x)
     y = []
     # Y's location in the input
     if len(prev_output) == 3: # X are Y
@@ -533,7 +600,7 @@ def clarify_confused():
             # look for a super class of Y
             else:
                 # get values for y
-                values2 = fs.get(y)
+                values2 = KB.get(y)
                 # if there are no super class of Y
                 if values2 == None:
                     # just give another fact
@@ -555,6 +622,7 @@ def clarify_confused():
 def clarify_unsure():
     # gives us permission to change global variable
     global clarify_count
+    global prev_output
     clarify_count += 1
     # If other AI is unsure who is a/an X, our AI should answer the question
     if prev_output[0] == 'who' and prev_output[1] == 'is':
@@ -564,7 +632,7 @@ def clarify_unsure():
         if answer == None:
             # give another who question of the super class of X
             # gets super class of X
-            superClass = fs.get(prev_output[3])
+            superClass = KB.get(prev_output[3])
             # if X has a more general category
             if superClass != None:
                 relatedWhoQuestion(superClass[0])
@@ -575,18 +643,23 @@ def clarify_unsure():
         # give answer
         else:
             print(answer[0] + " is a " + answer[3])
+            prev_output = [answer[0], 'is', 'a', answer[3]]
             
     # If other AI is unsure what is X, our AI will answer the question
-    elif prev_output[0] == 'what' and prev_output[1] == 'is':
-        # answer the question
+    elif prev_output[0] == 'what' and prev_output[1] == 'is':        # answer the question
         answer = checkWhatQuestion(prev_output[3])
         # if no answer was found
         if answer == None:
-            # give related question
-            print("ask related question to 'what is X'")
+            # give another related question (I.E what is Z)
+            # get a person or thing
+            keys = KB.keys()
+            name = keys[random.randint(0,len(keys)-1)]
+            print("what is " + name)
+            prev_output = ['what', 'is', name]
         # give answer
         else:
             print(answer[0] + " is a " + answer[3])
+            prev_output = [answer[0], 'is', 'a', answer[3]]
             
     # If other AI is unsure if X is a Y
     elif prev_output[0] == 'is':
@@ -595,10 +668,11 @@ def clarify_unsure():
         # if no answer was found
         if answer == None:
             # give related question
-            print("ask related question to 'is X a Y'")
+            relatedIsQuestion(prev_output[3])
         # give answer
         else:
             print(answer[0] + " is a " + answer[3])
+            prev_output = [answer[0], 'is', 'a', answer[3]]
             
     # If other AI is unsure if X are Y's
     elif prev_output[0] == 'are':
@@ -607,16 +681,25 @@ def clarify_unsure():
         # if no answer was found
         if answer == None:
             # give related question
-            print("ask related question to 'are X Y'")
+            # if other AI doesn't know if X are Ys then ask if Z are Ys
+            # pick a Z
+            categories = KB2.keys()
+            old_x = prev_output[1] # symbol for x
+            x = KB2[random.randint(0,len(categories)-1)]
+            # while new x == old_x
+            while x == old_x:
+                x = KB2[random.randint(0,len(categories)-1)]
+            # ask the question if new x is a Y
+            print("are " + x + " " + prev_output[2])
+            prev_output = ['are', x, prev_output[2]]
         # give answer
         else:
             print(answer[0] + " are " + answer[2])
+            prev_output = [answer[0], 'are', answer[2]]
     # program should never get here; need to remove later
     else:
-        print("error, program should not be here")
-
-    
-
+        print("if you are here, then other AI is unsure of a fact")
+        clarify_confused()
 
 
 
