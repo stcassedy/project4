@@ -293,7 +293,7 @@ def convert(nounList, inType):
     elif inType == 'P':
         index = 0
         check = 1
-    else: 
+    else: #should never be here
         print("error, parameter 2 incorrect format")
         sys.exit()
     # list to return
@@ -307,6 +307,11 @@ def convert(nounList, inType):
     # return the list
     return c_list
 
+
+
+
+
+
 # ------------------------------------------------------------------------------
 # These functions deal with inference and answering questions.
 # If an answer is not known, then the AI can ask a question related to the
@@ -314,10 +319,6 @@ def convert(nounList, inType):
 # if it does not know, it can look through the database and pick a random
 # person or thing) or it can respond with "I am not sure"
 # ------------------------------------------------------------------------------
-
-
-
-
 
 ###########################################################
 
@@ -378,20 +379,15 @@ def checkWhoQuestion(word):
 
 # A function that answers questions of the form "what is X"
 def checkWhatQuestion(aThing):
-    # find X in the keys (X should be a specific thing or person)
-    keys = KB.keys()
+    # variable to hold the properties of aThing
     properties = None
     # stores the index of the key
     index = 0
     # variable to store our response to the what is X question
     response = []
-    # look for x in the database
-    for index in range(0,len(keys)-1):
-        # if the key is x
-        if keys[index] == aThing:
-            # assigns the properties of x to var values
-            properties = KB[aThing]
-            break
+    # if this person or thing is known
+    if aThing in individual:
+        properties = KB[aThing]
     # if AI does not know what X is
     if properties == None:
         # we can have a 50% chance to say not sure or ask related question
@@ -416,15 +412,14 @@ def checkWhatQuestion(aThing):
     return response
 
 # A function that answers questions of the form "Are X Y"
-def checkAreQuestion(aThing, category):
-    # get key (categories) of KB2
-    keys = KB2.keys()
+def checkAreQuestion(aThing, inCategory):
+    # stores the response in a variable
     response = []
     # look for X in the list of keys
     properties = None
-    for index in range(0, len(keys)-1):
-        if keys[index] == aThing:
-            properties = KB2[aThing]
+    # if this category is known
+    if aThing in category:
+        properties = KB[aThing]
     # If X is not in the database
     if properties == None:
         # 50% chance to say unsure or give related query/fact
@@ -433,7 +428,7 @@ def checkAreQuestion(aThing, category):
         # stores list of what X is
         values = properties[0]
         # check if X has Y in its property list
-        if category in values:
+        if inCategory in values:
             response = [aThing, 'are', category]
         else:
             # 50% chance to say unsure or give related query/fact
@@ -445,10 +440,13 @@ def checkAreQuestion(aThing, category):
 
 # ------------------------------------------------------------------------------
 # These functions deal with asking questions
-# Need to think of a way to form questions
 # ------------------------------------------------------------------------------
 
 ############ related is-question ###################
+# A function that asks a related question to is X a/an Y
+# The AI will ask for clarification if it doesnt know.
+# If it doesnt know who X is, it will ask what is X
+# if it doesnt know what Y is, it will ask who is a Y
 def relatedIsQuestion(a_object):
 
     rand= random.randint(0,len(individual)-1)   
@@ -475,7 +473,9 @@ def relatedIsQuestion(a_object):
 
 
 ############related who-questions##########
-
+# A function that asks a related question to "who is a/an Y"
+# The AI will take a guess, so it will ask "is X a/an Y"
+# where X is a randomly chosen specific person or thing
 def relatedWhoQuestion(a_object, a_an):  # or adj ??
 
 # check whether word is already asked or not
@@ -487,7 +487,13 @@ def relatedWhoQuestion(a_object, a_an):  # or adj ??
     print('Who is',a_an, a_object,'?')
     askedWhoQ.append(a_object)
 
+# A function that asks a related question to "what is X"
+# The AI will take a guess, so it will ask "is X a Y?"
+# where Y is random chosen higher category than X
+def relatedWhatQuestion(aThing):
 
+# A function that asks a related question to "are X Ys"
+def relatedAreQuestion(aThing, category):
     
 
 # ------------------------------------------------------------------------------
@@ -499,6 +505,42 @@ def relatedWhoQuestion(a_object, a_an):  # or adj ??
 # If a fact is already known, the AI will either give a new fact or query with
 # an equal chance of either one happening.
 # ------------------------------------------------------------------------------
+
+# gives a fact that the AI knows
+def giveFact():
+    global fact_value
+    global fact_key
+    global prev_output
+    # gets all the keys from the database
+    keys = KB.keys()
+    # check which key we are on
+    key = keys[fact_key]
+    # get properties of the thing we're looking at
+    properties = KB[key]
+    values = properties[0] # list of what person/category is, is in 1st index
+    # determine if the key is a person or category
+    if key in Individual:
+        # If its a person
+        # >>>> NEED TO CHECK WHETHER TO USE A/AN <<<<<<<
+        print(key + ' is' + ' a ' + values[fact_value])
+        # update global counter
+        prev_output = [key, 'is', 'a', values[fact_value]]
+    else:
+        # If its a general category
+        # >>>> NEED TO CHECK WHETHER TO USE A/AN <<<<<<<
+        print(key + ' are ' + values[fact_value])
+        # update what previous output was
+        prev_output = [key, 'are', values[fact_value]]
+    # update global variables
+    fact_value += 1
+    # if end of list
+    if fact_value > len(values)-1:
+        # reset value counter
+        fact_value = 0
+        fact_key += 1
+        # if at the end of DB
+        if fact_key > len(keys)-1:
+            fact_key = 0 # start from very beginning
 
 # This helper function adds the fact into the database
 # Note: all facts are stored as singular!
@@ -629,44 +671,33 @@ def clarify_unsure():
         # answer the question
         answer = checkWhoQuestion(prev_output[3])
         # if no answer was found
-        if answer == None:
-            # give another who question of the super class of X
-            # gets super class of X
-            superClass = KB.get(prev_output[3])
-            # if X has a more general category
-            if superClass != None:
-                relatedWhoQuestion(superClass[0])
-            # else just ask another who question
-            else:
-                # Note: parameter might have to change since WhoQuestion is broken
-                relatedWhoQuestion(prev_output[3])
+        if answer[0] == 'i' and answer[1] == 'am' and answer[2] == 'unsure':
+            # ask a related question
+            answer = relatedWhoQuestion(prev_output[3])
         # give answer
         else:
+            # ===== >NEED TO FIX ALL PRINT STATMENTS!!!!! <=================
             print(answer[0] + " is a " + answer[3])
             prev_output = [answer[0], 'is', 'a', answer[3]]
             
     # If other AI is unsure what is X, our AI will answer the question
-    elif prev_output[0] == 'what' and prev_output[1] == 'is':        # answer the question
+    elif prev_output[0] == 'what' and prev_output[1] == 'is':
+        # answer the question
         answer = checkWhatQuestion(prev_output[3])
         # if no answer was found
-        if answer == None:
-            # give another related question (I.E what is Z)
-            # get a person or thing
-            keys = KB.keys()
-            name = keys[random.randint(0,len(keys)-1)]
-            print("what is " + name)
-            prev_output = ['what', 'is', name]
+        if answer[0] == 'i' and answer[1] == 'am' and answer[2] == 'unsure':
+            answer = relatedWhatQuestion(prev_output[3])
         # give answer
         else:
             print(answer[0] + " is a " + answer[3])
-            prev_output = [answer[0], 'is', 'a', answer[3]]
+            prev_output = [answer[0], answer[1], answer[2], answer[3]]
             
     # If other AI is unsure if X is a Y
     elif prev_output[0] == 'is':
         # answer the question
         answer = checkIsQuestion(prev_output[1], prev_output[3], prev_output[2])
         # if no answer was found
-        if answer == None:
+        if answer[0] == 'i' and answer[1] == 'am' and answer[2] == 'unsure':
             # give related question
             relatedIsQuestion(prev_output[3])
         # give answer
@@ -679,19 +710,9 @@ def clarify_unsure():
         # answer the question
         answer = checkAreQuestion(prev_output[1], prev_output[2])
         # if no answer was found
-        if answer == None:
+        if answer[0] == 'i' and answer[1] == 'am' and answer[2] == 'unsure':
             # give related question
-            # if other AI doesn't know if X are Ys then ask if Z are Ys
-            # pick a Z
-            categories = KB2.keys()
-            old_x = prev_output[1] # symbol for x
-            x = KB2[random.randint(0,len(categories)-1)]
-            # while new x == old_x
-            while x == old_x:
-                x = KB2[random.randint(0,len(categories)-1)]
-            # ask the question if new x is a Y
-            print("are " + x + " " + prev_output[2])
-            prev_output = ['are', x, prev_output[2]]
+            relatedAreQuestion(prev_output[1], prev_output[2])
         # give answer
         else:
             print(answer[0] + " are " + answer[2])
