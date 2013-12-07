@@ -555,8 +555,8 @@ def addFact(subClass, superClass):
                 added = True
                 # if fact is known, then give new fact or query
                 if random.randint(0,1):
-                    #randomly choose a fact
-                    print(facts.pop(random.randint(0,len(facts)-1)))
+                    # give a fact
+                    giveFact()
                 else:
                     #randomly create a query
                     temp = random.sample( KB.keys(),1)
