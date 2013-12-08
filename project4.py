@@ -2,7 +2,7 @@
 
 """ DOCUMENTATION
 Group: Nelson Chen, Jean Chen, Steve Cassedy, Sophal Chhay
-testing
+
 To run the program, double click the file.
 If using IDLE, while the program window is up,
 press F5 or go to run -> Run Module
@@ -31,7 +31,8 @@ prev_output = []
 # questions already asked
 askedWhoQ=[]
 askedIsQ= []
-
+askedWhatQ= []
+a_an="a/an"
 
 ################################################################################
 '''
@@ -65,7 +66,9 @@ individual = ['Steve','Gandalf','Chewbacca','Daxter','Fido','Nelly']
 
 #list of possible things
 category = ['human','animal','wizard','wookie','ottsel',
-          'alien','mammal','idiot','dog','cat']
+          'alien','mammal','idiot','dog','cat','humans',                    
+          'animals', 'wizards','wookies','ottsels','aliens',
+          'mammals','idiots','dogs','cats']
 
 # nouns knowledge base format is a list of a list.  Inner list is of
 # the form [singular, plural]. I.E [[person, people], [foot, feet] ...]
@@ -333,12 +336,11 @@ def checkIsQuestion(rand_name, word, a_an):
             if word == ele:
                 check=True
                 print(rand_name,"is",a_an ,word,'.')
-	# if kb doesn't have the fact, ask a related query
+# if kb doesn't have the fact, ask a related query
     if (check==False):  
 
-    #?????? asked a related questions 
-    #print('Thanks, I did not know that myself.') 
-        relatedWhoQuestion(word, a_an)
+    #asked a related questions 
+        relatedToIsQuestion(rand_name, word)
 
 ########################################################
 #reply for who question
@@ -373,7 +375,7 @@ def checkWhoQuestion(word):
 # if kb doesn't have the fact, ask a related query
     if(output==''):
        #asked related query (create is question)
-        relatedIsQuestion(word)
+        relatedToWhoQuestion(word)
    
 ########################################################
 
@@ -447,11 +449,33 @@ def checkAreQuestion(aThing, inCategory):
 # The AI will ask for clarification if it doesnt know.
 # If it doesnt know who X is, it will ask what is X
 # if it doesnt know what Y is, it will ask who is a Y
-def relatedIsQuestion(a_object):
 
-    rand= random.randint(0,len(individual)-1)   
+def relatedToIsQuestion(x_value, y_value):
+    rand= random.randint(0,1)
+    if(rand==0):
+        if(x_value in individual):
+            print("Who is ", a_an, x_value,'?')
+            askedWhoQ.append(x_value)
+        else:
+            print('What is', x_value,'?')
+            askedWhatQ.append(x_value)
+    else:
+        if(y_value in category):
+            print('What is',a_an, y_value,'?')
+            askedWhatQ.append(x_value)
+        else:
+            print('Who is',a_an, y_value,'?')
+            askedWhoQ.append(y_value)
+            
+############related who-questions##########
+# A function that asks a related question to "who is a/an Y"
+# The AI will take a guess, so it will ask "is X a/an Y"
+# where X is a randomly chosen specific person or thing
+
+def relatedToWhoQuestion(a_object, a_an): 
+    rand= random.randint(0,len(individual)-1)
    
-    #pick a random number from category
+    #pick a random number from individual
     rand_name= individual[rand]
 
   
@@ -462,8 +486,10 @@ def relatedIsQuestion(a_object):
 # if yes, get a another random word
     while(flag==True):
        rand= random.randint(0,len(individual)-1)
-     
-# check whether word is already asked or not
+       #pick a random number from individual
+       rand_name= individual[rand]
+
+       # check whether word is already asked or not
        currQuest= (rand_name, a_object)
        flag= currQuest in askedIsQ
 
@@ -471,30 +497,45 @@ def relatedIsQuestion(a_object):
     askedIsQ.append(currQuest)
 
 
-
-############related who-questions##########
-# A function that asks a related question to "who is a/an Y"
-# The AI will take a guess, so it will ask "is X a/an Y"
-# where X is a randomly chosen specific person or thing
-def relatedWhoQuestion(a_object, a_an):  # or adj ??
-
-# check whether word is already asked or not
-    flag= a_object in askedWhoQ
-# if yes, get a another random word
-    while(flag==True):
-        flag= a_object in askedWhoQ
-            
-    print('Who is',a_an, a_object,'?')
-    askedWhoQ.append(a_object)
-
 # A function that asks a related question to "what is X"
 # The AI will take a guess, so it will ask "is X a Y?"
 # where Y is random chosen higher category than X
 def relatedWhatQuestion(aThing):
+    rand= random.randint(0,len(category)-1)
+   
+    #pick a random number from category
+    rand_name= category[rand]
 
+  
+# check whether word is already asked or not
+    currQuest= (rand_name,aThing)
+    flag= currQuest in askedIsQ
+
+# if yes, get a another random word
+    while(flag==True):
+       rand= random.randint(0,len(category)-1)
+        #pick a random number from category
+       rand_name= category[rand]
+        # check whether word is already asked or not
+       currQuest= (rand_name, aThing)
+       flag= currQuest in askedIsQ
+
+    print('Is', rand_name, 'a/an',aThing,'?')
+    askedIsQ.append(currQuest)
 # A function that asks a related question to "are X Ys"
-def relatedAreQuestion(aThing, category):
-    
+def relatedAreQuestion(aThing, aThing2):
+
+    rand= random.randint(0,1)
+    if(rand==0):
+            print("What are ", aThing,'?')
+            askedWhatQ.append(aThing)
+    else:
+            print('What are',aThing2,'?')
+            askedWhatQ.append(aThing2)
+        
+
+    	
+
 
 # ------------------------------------------------------------------------------
 # These functions deal with storing knowledge into the database
@@ -673,7 +714,7 @@ def clarify_unsure():
         # if no answer was found
         if answer[0] == 'i' and answer[1] == 'am' and answer[2] == 'unsure':
             # ask a related question
-            answer = relatedWhoQuestion(prev_output[3])
+            answer = relatedToWhoQuestion(prev_output[3])
         # give answer
         else:
             # ===== >NEED TO FIX ALL PRINT STATMENTS!!!!! <=================
@@ -699,7 +740,7 @@ def clarify_unsure():
         # if no answer was found
         if answer[0] == 'i' and answer[1] == 'am' and answer[2] == 'unsure':
             # give related question
-            relatedIsQuestion(prev_output[3])
+            relatedToIsQuestion(prev_output[1],prev_output[3])
         # give answer
         else:
             print(answer[0] + " is a " + answer[3])
@@ -838,8 +879,9 @@ def process_input(line):
 
 # the main function
 def main():
+
     """ The main loop of your program. """
-    
+
     global output # tells program to use global variable
     # start by give a fact
     print("fido is a dog") # fact holder
@@ -854,6 +896,7 @@ def main():
             print("I am leaving.")
             break
 
+    
 # This executes main() if project4.py was executed at the shell.
 # Otherwise, main() will not be called (useful for debugging)..
 if __name__ == "__main__":
