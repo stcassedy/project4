@@ -321,7 +321,7 @@ def print_list(inList):
 # A function that removes punctuation marks
 def remove_punc(word):
     newWord = word
-    for index in range(0,len(word)-1)
+    for index in range(0,len(word)-1):
         letter = word[index]
         if letter == '!' or letter == '?' or letter == ',' or letter == '.':
             newWord = word[0:index]
@@ -413,7 +413,8 @@ def checkWhatQuestion(aThing):
         # we can have a 50% chance to say not sure or ask related question
         # if time permits
         response = ['I', 'am', 'unsure']
-    else: 
+    else:
+        global fact_value
         # the first list in properties is what X is
         values = properties[0]
         # give one of the things that X is that hasn't be given yet
@@ -422,7 +423,6 @@ def checkWhatQuestion(aThing):
         if index == fact_key:
             xIs = values[fact_value]
             # updates global counter
-            global fact_value
             fact_value += 1
         # else give the last fact about X
         else:
@@ -804,7 +804,7 @@ def process_input2(line):
         # there should only be one subject
         people.append(line[0])
         # iterate through line list and get all categories
-        for index in range(3, len(line))
+        for index in range(3, len(line)):
             # if this word is 'a' do nothing
             if line[index] == 'a':
                 continue #do nothing
