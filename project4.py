@@ -296,7 +296,7 @@ def convert(nounList, inType):
     elif inType == 'P':
         index = 0
         check = 1
-    else: #should never be here
+    else: #should never be here, for debugging purposes only
         print("error, parameter 2 incorrect format")
         sys.exit()
     # list to return
@@ -309,6 +309,24 @@ def convert(nounList, inType):
                 break
     # return the list
     return c_list
+
+# A function that prints a list to std.out
+def print_list(inList):
+    for index in range(0, len(inList) - 1):
+        if index == len(inList)-1:
+            print(inList[index])
+        else:
+            print(inList[index], end =" ")
+
+# A function that removes punctuation marks
+def remove_punc(word):
+    newWord = word
+    for index in range(0,len(word)-1)
+        letter = word[index]
+        if letter == '!' or letter == '?' or letter == ',' or letter == '.':
+            newWord = word[0:index]
+            break
+    return newWord
 
 
 
@@ -772,13 +790,84 @@ def clarify_unsure():
 # Main function and helper functions that help parse the input
 # ------------------------------------------------------------------------------
 
+# A function that process the input depending on new restrictions
+# If the program reaches here then either malformed input was recieved
+# or input with more than one subject was recieved
+# Example form:  Josh is a student and a TA
+# Example Form2: Josh and Emily are TAs
+def process_input2(line):
+    people = []
+    categories = []
+    new_fact = [] # remembers a new fact that has been added
+    # check if line contains is
+    if line[1] == 'is' and line[2] == 'a' and ('and' in line):
+        # there should only be one subject
+        people.append(line[0])
+        # iterate through line list and get all categories
+        for index in range(3, len(line))
+            # if this word is 'a' do nothing
+            if line[index] == 'a':
+                continue #do nothing
+            # if this word is 'and', we only have one more category to add
+            elif line[index] == 'and':
+                # remove the period if it contains it
+                word = remove_punc(line[index+2])
+                # the location of this category in the list is 2 spaces ahead
+                categories.append(word)
+                break
+            # any other word is added as a category
+            else:
+                # removed the comma if it contains it
+                word = remove_punc(line[index])
+                categories.append(word)
+        # after everything has been added, add all these facts to DB
+        # directly, so it doesnt give a response
+        for index in range(0, len(categories)-1):
+            inserted = addFact(people[0], categories[index])
+            # if fact was not known, then it was inserted
+            if inserted:
+                new_fact = [people[0], categories[index]]
+        # give a related query to a new fact that has been added
+        relatedToIsQuestion(new_fact[0], new_fact[1])
+
+    # if line has an 'are' in it (josh and emily are TAs)
+    elif line[len(line)-2] == 'are' and ('and' in line):
+        # there are more than one subject but only one category
+        # stores all the people into the list of people
+        for index in range(0,len(line)-1):
+            # if this part of the line says 'and
+            if line[index] == 'and':
+                # add the last person to the list (which is the next word)
+                people.append(line[index+1])
+                break # stop looking for people
+            else:
+                # remove any puncations associated with the name
+                person = remove_punc(line[index])
+                people.append(line[index])
+        # stores the category into the list
+        categories.append(line[len(line)-1])
+        # add all the facts into DB
+        for index in range(0,len(people)-1):
+            inserted = addFact(people[index],categories[0])
+            if inserted:
+                new_fact = [people[index], categories[0]]
+        # give a related query to the new fact that has been added
+        relatedAreQuesion(new_fact[0], new_fact[1])
+
+    # all other input are considered malform input
+    else:
+        global prev_output
+        prev_output = ['i', 'am', 'confused']
+        print("I am confused")
+                
+
 # A function that handles inputs of length 4
 def process_input4(AI_Input):
     # if input is of the form who is a/an Y
     if AI_Input[0] == 'who' and AI_Input[1] == 'is':
         # had to put rest of conditional on a new line
         if AI_Input[2] == 'a' or AI_Input[2] == 'an':
-            checkWhoQuestion(AI_Input[3])
+            answer = checkWhoQuestion(AI_Input[3])
         # Print statement here because it skips the other one at
         # end in case of malform input
         else:
@@ -786,7 +875,7 @@ def process_input4(AI_Input):
     # if input is of the form X is a/an Y
     elif AI_Input[1] == 'is' and (AI_Input[2] == 'a' or AI_Input[2] == 'an'):
         # helper function that adds the fact to KB if not known
-        addFact(AI_Input[0], AI_Input[3])
+        addFactIs(AI_Input[0], AI_Input[3])
     # if input is of the form is X a/an Y
     elif AI_Input[0] == 'is' and (AI_Input[2]== 'a' or AI_Input[2] == 'an'):
         #print("is X a/an Y")
@@ -807,7 +896,7 @@ def process_input3(AI_Input):
     elif AI_Input[1] == 'are':
         print("Xs are Ys")
         # Add fact to KB if not known
-        addFact(AI_Input[0], AI_Input[2])
+        addFactAre(AI_Input[0], AI_Input[2])
     # if input is "I am leaving."
     elif AI_Input[0] == 'I' and AI_Input[1] == 'am' and AI_Input[2] == 'leaving':
         print("I am leaving")
@@ -834,8 +923,8 @@ def process_input(line):
         should be handled with 'I am confused' """
 
     # parse the line and check what is being asked or told
-    AI_Input = line.split()
-    length = len(AI_Input)
+    input1 = line.split()
+    length = len(input1)
     # allows us to change global variables
     global clarify_count
     global flag_confused
@@ -846,36 +935,40 @@ def process_input(line):
         flag_confused = False
         clarify_count = 0
         # process inputs of length 4
-        process_input4(AI_Input)
-    # if input is "I am unsure"
-    elif AI_Input[0] == 'I' and AI_Input[1] == 'am' and AI_Input[2] == 'unsure':
-        if clarify_count == 3:
-            # give up and give another fact
-            giveFact()
-            clarify_count = 0 # reset counter
-        else:
-            clarify_unsure()
-    # if input is "I am confused"
-    elif AI_Input[0] == 'I' and AI_Input[1]== 'am' and AI_Input[2]== 'confused':
-        if clarify_count == 3:
-            # give up and give another fact
-            giveFact()
-            clarify_count = 0 # reset counter
-        else:
-            clarify_confused()
+        process_input4(input1)
+        
     # if length of list is 3
     elif length == 3:
-        # resets confused counter in case the other AI was confused
-        # on previous input
-        flag_confused = False
-        clarify_count = 0
-        # process inputs of length 3
-        process_input3(AI_Input)
-    # all other input will be answered with "I am confused"
+        # if input is "I am unsure"
+        if input1[0] == 'I' and input1[1] == 'am' and input1[2] == 'unsure':
+            if clarify_count == 3:
+                # give up and give another fact
+                giveFact()
+                clarify_count = 0 # reset counter
+            else:
+                clarify_unsure()
+        # if input is "I am confused"
+        elif input1[0] == 'I' and input1[1]== 'am' and input1[2]== 'confused':
+            if clarify_count == 3:
+                # give up and give another fact
+                giveFact()
+                clarify_count = 0 # reset counter
+            else:
+                clarify_confused()
+        else:
+            # resets confused counter in case the other AI was confused
+            # on previous input
+            flag_confused = False
+            clarify_count = 0
+            # process inputs of length 3
+            process_input3(input1)
+        
+    # all other input will need to be checked if malformed or
+    # if there is more than one subject in the line
     else:
         flag_confused = False
         clarify_counter = 0
-        print("I am confused")
+        process_input2(input1)
 
 # the main function
 def main():
