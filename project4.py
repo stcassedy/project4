@@ -302,9 +302,9 @@ def convert(nounList, inType):
     # list to return
     c_list = []
     # check all the known nouns
-    for noun in nounList:
-        for pair in nouns:
-            if pair[pairIndex] == noun:
+    for noun in nounList: # for each noun in list passed in
+        for pair in nouns: # for each pair of nouns (sing, plur) in KB
+            if pair[check] == noun:
                 c_list.append(pair[index])
                 break
     # return the list
@@ -571,25 +571,41 @@ def giveFact():
     global fact_key
     global prev_output
     # gets all the keys from the database
-    keys = KB.keys()
-    # check which key we are on
-    key = keys[fact_key]
+    keys = sorted(KB.keys())
     # get properties of the thing we're looking at
-    properties = KB[key]
-    values = properties[0] # list of what person/category is, is in 1st index
+    properties = []
+    values = [] # list of what person/category is, is in 1st index
+    # key can have no properties, if this is the case, a new key must be chosen
+    while values == []:
+        fact_key += 1
+        # if end of list
+        if fact_value > len(values)-1:
+            # reset value counter
+            fact_value = 0
+            fact_key += 1
+            # if at the end of DB
+            if fact_key > len(keys)-1:
+                fact_key = 0 # start from very beginning
+        # check which key we are on
+        key = keys[fact_key]
+        # get properties of the thing we're looking at
+        properties = KB[key]
+        # list of what person/category is, is in 1st index
+        values = properties[0]
     # determine if the key is a person or category
-    if key in Individual:
+    if key in individual:
         # If its a person
         # >>>> NEED TO CHECK WHETHER TO USE A/AN <<<<<<<
         print(key + ' is' + ' a ' + values[fact_value])
         # update global counter
         prev_output = [key, 'is', 'a', values[fact_value]]
     else:
+        # swap from singular to plural
+        plurals = convert([key, values[fact_value]], 'S')
         # If its a general category
-        # >>>> NEED TO CHECK WHETHER TO USE A/AN <<<<<<<
-        print(key + ' are ' + values[fact_value])
+        print(plurals[0] + ' are ' + plurals[1])
         # update what previous output was
-        prev_output = [key, 'are', values[fact_value]]
+        prev_output = [plurals[0], 'are', plurals[1]]
     # update global variables
     fact_value += 1
     # if end of list
@@ -977,7 +993,7 @@ def main():
 
     global output # tells program to use global variable
     # start by give a fact
-    print("fido is a dog") # fact holder
+    giveFact() # fact holder
     output += 1 # increment output counter
     # process each line from standard input
     for line in sys.stdin:
