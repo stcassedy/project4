@@ -32,7 +32,7 @@ prev_output = []
 askedWhoQ=[]
 askedIsQ= []
 askedWhatQ= []
-a_an="a/an"
+a_an="a/an" # it needs to be one or the other in the correct circumstance
 
 ################################################################################
 '''
@@ -66,9 +66,7 @@ individual = ['Steve','Gandalf','Chewbacca','Daxter','Fido','Nelly']
 
 #list of possible things
 category = ['human','animal','wizard','wookie','ottsel',
-          'alien','mammal','idiot','dog','cat','humans',                    
-          'animals', 'wizards','wookies','ottsels','aliens',
-          'mammals','idiots','dogs','cats']
+          'alien','mammal','idiot','dog','cat']
 
 # nouns knowledge base format is a list of a list.  Inner list is of
 # the form [singular, plural]. I.E [[person, people], [foot, feet] ...]
@@ -298,6 +296,8 @@ def update_KB_poss(thing,poss):
 
 # a helper function that converts a list of nouns to its counter-part
 # inType is if the nounList is plural 'P' or singular 'S'
+# if it doesn't know the plural it will add an S
+# if it doesn't know the singular it will remove the last letter
 def convert(nounList, inType):
     if inType == 'S':
         index = 1
@@ -316,12 +316,20 @@ def convert(nounList, inType):
             if pair[check] == noun:
                 c_list.append(pair[index])
                 break
+            # if no plural/singular was found
+            elif pair == nouns[len(nouns)-1]:
+                # add an S to the end
+                if inType == 'S':
+                    c_list.append(noun+'s')
+                # remove the last letter (assumed to be s)
+                else:
+                    c_list.append(noun[0:len(noun)-1])
     # return the list
     return c_list
 
 # A function that prints a list to std.out
 def print_list(inList):
-    for index in range(0, len(inList) - 1):
+    for index in range(0, len(inList)):
         if index == len(inList)-1:
             print(inList[index])
         else:
@@ -330,7 +338,7 @@ def print_list(inList):
 # A function that removes punctuation marks
 def remove_punc(word):
     newWord = word
-    for index in range(0,len(word)-1):
+    for index in range(0,len(word)):
         letter = word[index]
         if letter == '!' or letter == '?' or letter == ',' or letter == '.':
             newWord = word[0:index]
@@ -362,12 +370,12 @@ def checkIsQuestion(rand_name, word, a_an):
         for ele in values:
             if word == ele:
                 check=True
-                print(rand_name,"is",a_an ,word,'.')
+                word2 = word+'.'
+                return [rand_name,'is',a_an ,word2]
 # if kb doesn't have the fact, ask a related query
     if (check==False):  
-
-    #asked a related questions 
-        relatedToIsQuestion(rand_name, word)
+        # 50/50 chance to give related query or respond I am unsure
+        return ['I', 'am', 'unsure']
 
 ########################################################
 #reply for who question
@@ -376,7 +384,7 @@ def checkWhoQuestion(word):
     check=False
     count=0
     ct=0
-    output=''
+    output=[]
     correct_answer=[]
     for name, value in KB.items():
         if word in value:
@@ -386,37 +394,42 @@ def checkWhoQuestion(word):
     if(count !=0):
         if(count ==1):
               
-                output= correct_answer.pop(0)
-                print(output,'is a',word,'.')
+                output= [correct_answer.pop(0)]
+                word2 = word+'.'
+                return [output,'is','a',word2]
         else:
             while(ct !=count):
                 if(ct == count-1):
                     output+=' and '
                     output +=correct_answer.pop(0)
                 else:
-                    output +=' '
+                    output +=', '
                     output += correct_answer.pop(0)
                 ct+=1
             word+='s'
-            print(output,'are',word,'.')         
+            return [output,'are',word2]   
 # if kb doesn't have the fact, ask a related query
-    if(output==''):
-       #asked related query (create is question)
-        relatedToWhoQuestion(word)
+    if(output==[]):
+       # 50/50 chance to ask question or reply i am unsure
+        return ['I', 'am', 'unsure']
    
 ########################################################
 
-# A function that answers questions of the form "what is X"
+# A function that answers questions of the form "what is/are X"
+# This function only returns one thing (rather than multiple)
+# Need to implement this when time permits
 def checkWhatQuestion(aThing):
     # variable to hold the properties of aThing
     properties = None
-    # stores the index of the key
-    index = 0
     # variable to store our response to the what is X question
     response = []
     # if this person or thing is known
     if aThing in individual:
         properties = KB[aThing]
+    # if this category is known
+    elif aThing in category:
+        properties = KB[aThing]
+        
     # if AI does not know what X is
     if properties == None:
         # we can have a 50% chance to say not sure or ask related question
@@ -428,27 +441,35 @@ def checkWhatQuestion(aThing):
         values = properties[0]
         # give one of the things that X is that hasn't be given yet
         xIs = None
-        # if we're giving facts about X, then just give the next fact
-        if index == fact_key:
+        # Check if we're giving facts about X, then just give the next fact
+        keys = sorted(KB.keys())
+        if aThing == keys[fact_key]:
             xIs = values[fact_value]
             # updates global counter
             fact_value += 1
         # else give the last fact about X
         else:
             xIs = values[len(values)-1]
-        # updates previous output
-        response = [aThing, 'is', 'a', xIs]
+        # updates response base on if X is an individual or category
+        if aThing in individual:
+            response = [aThing, 'is', 'a', xIs]
+        else:
+            # converts noun to plural
+            plural = convert([xIs],'S')
+            response = [aThing, 'are', plural[0]]
     return response
 
 # A function that answers questions of the form "Are X Y"
 def checkAreQuestion(aThing, inCategory):
     # stores the response in a variable
     response = []
+    # switches X and Y from plural to singular
+    singular = convert([aThing, inCategory], 'P')
     # look for X in the list of keys
     properties = None
-    # if this category is known
-    if aThing in category:
-        properties = KB[aThing]
+    # if this category (X) is known
+    if singular[0] in category:
+        properties = KB[singular[0]]
     # If X is not in the database
     if properties == None:
         # 50% chance to say unsure or give related query/fact
@@ -457,8 +478,8 @@ def checkAreQuestion(aThing, inCategory):
         # stores list of what X is
         values = properties[0]
         # check if X has Y in its property list
-        if inCategory in values:
-            response = [aThing, 'are', category]
+        if singular[1] in values:
+            response = [aThing, 'are', inCategory]
         else:
             # 50% chance to say unsure or give related query/fact
             response = ['I', 'am', 'unsure']
@@ -477,22 +498,28 @@ def checkAreQuestion(aThing, inCategory):
 # If it doesnt know who X is, it will ask what is X
 # if it doesnt know what Y is, it will ask who is a Y
 
+# note if recieving fact is should ask a follow up question
+# like who is a Y (which it does not)
+
 def relatedToIsQuestion(x_value, y_value):
     rand= random.randint(0,1)
     if(rand==0):
+        word = x_value+'?'
         if(x_value in individual):
-            print("Who is ", a_an, x_value,'?')
-            askedWhoQ.append(x_value)
+            #askedWhoQ.append(x_value)
+            return ['Who', 'is', a_an, word]
         else:
-            print('What is', x_value,'?')
-            askedWhatQ.append(x_value)
+            #askedWhatQ.append(x_value)
+            return ['What', 'is', word]
     else:
+        word = y_value+'?'
         if(y_value in category):
-            print('What is',a_an, y_value,'?')
-            askedWhatQ.append(x_value)
+            #askedWhatQ.append(y_value)
+            return ['What', 'is', a_an, word]            
         else:
-            print('Who is',a_an, y_value,'?')
-            askedWhoQ.append(y_value)
+            #askedWhoQ.append(y_value)
+            return ['Who','is',a_an, word]
+            
             
 ############related who-questions##########
 # A function that asks a related question to "who is a/an Y"
@@ -520,7 +547,8 @@ def relatedToWhoQuestion(a_object, a_an):
        currQuest= (rand_name, a_object)
        flag= currQuest in askedIsQ
 
-    print('Is', rand_name, 'a/an',a_object,'?')
+    word = a_object+'?'
+    return ['Is', rand_name, 'a/an',word]
     askedIsQ.append(currQuest)
 
 
@@ -547,18 +575,45 @@ def relatedWhatQuestion(aThing):
        currQuest= (rand_name, aThing)
        flag= currQuest in askedIsQ
 
-    print('Is', rand_name, 'a/an',aThing,'?')
+    word = aThing+'?'
+    return ['Is', rand_name, 'a/an',word]
     askedIsQ.append(currQuest)
+    
 # A function that asks a related question to "are X Ys"
-def relatedAreQuestion(aThing, aThing2):
+# or if it recieves a fact of the form X are Ys
 
-    rand= random.randint(0,1)
-    if(rand==0):
-            print("What are ", aThing,'?')
-            askedWhatQ.append(aThing)
-    else:
-            print('What are',aThing2,'?')
-            askedWhatQ.append(aThing2)
+# Note when asking about a related fact, check if X is an individual or category
+# if X is an individual it should ask is X a/an Ys
+# if X is a category it should ask are X Ys
+# but this asks a question we know the answer to... just ask what is Y?
+def relatedAreQuestion(aThing2):
+    word = aThing2+'?'
+    #askedWhatQ.append(aThing)
+    return ['What', 'are', word]
+    #rand= random.randint(0,1)
+    #if(rand==0):
+    #    word = aThing+'?'
+    #    return ['What', 'are', word]
+    #    askedWhatQ.append(aThing)
+    #else:
+    #    word = aThing2+'?'
+    #    return ['What','are',word]
+    #    askedWhatQ.append(aThing2)
+
+# A function that takes a guess as to what aThing could be
+# this returns a related query
+def guessAreQuestion(aThing):
+    # get the keys
+    keys = list(KB.keys())
+    # pick a key that is a category
+    key = keys[random.randint(0,len(keys))]
+    while not (key in category):
+        key = keys[random.randint(0,len(keys))]
+    # key needs to be changed to plural since this is an are question
+    plural = convert([key], 'S')
+    # when a key is found ask if this key is aThing
+    word = aThing+'?'
+    return ['Are', plural[0], word]
         
 
     	
@@ -581,9 +636,10 @@ def giveFact():
     global prev_output
     # gets all the keys from the database
     keys = sorted(KB.keys())
+    key = keys[fact_key]
     # get properties of the thing we're looking at
-    properties = []
-    values = [] # list of what person/category is, is in 1st index
+    properties = KB[key]
+    values = properties[0] # list of what person/category is, is in 1st index
     # key can have no properties, if this is the case, a new key must be chosen
     while values == []:
         fact_key += 1
@@ -628,34 +684,19 @@ def giveFact():
 
 # This helper function adds the fact into the database
 # Note: all facts are stored as singular!
-def addFactIs(subClass, superClass):
-    #updates the KB if necessary
-    #returns true or false depending on whether KB is updated
-    added = update_KB_is(subClass, superClass)
-    
-    #determines if we already know the plural of the superclass
-    plural_known = False
-    for noun in nouns:
-        if noun[0] == superClass:
-            plural_known = True
-    
-    if plural_known:
-        #continues if the plural is known
-        if added:
-            #not sure what we want to do in this situation
-            giveFact() #temporary
-        else:  
-            #fact already known (this works the same as before)
-            if random.randint(0,1):
-                # give a fact
-                giveFact()
-            else:
-                #randomly create a query
-                temp = random.sample( KB.keys(),1)
-                print("what is "+temp[0]+"?")
-    else:
-        #asks for the plural if the plural is not known
-        print("what is the plural of "+ superClass +"?")
+def addFact(subClass, superClass):
+    # check if the key exists
+    keys = list(KB.keys())
+    if subClass in keys:
+        # check if the superClass is already associated with subClass
+        properties = KB[subClass]
+        values = properties[0]
+        if superClass in values:
+            # do not add fact and return false
+            return False
+    # add this to the KB
+    update_KB_is(subClass, superClass)
+    return True
 
 # This function stores a fact of the form Xs are Ys
 # This function is needed because X and Y are plural
@@ -663,6 +704,7 @@ def addFactIs(subClass, superClass):
 # superClass is the general category (I.E animal)
 def addFactAre(subClass, superClass):
     # change subClass and superClass into singular nouns
+    # >>>NOTE: need to catch adjectives somehow!
     singList = convert([subClass, superClass], 'P')
     addFact(singList[0], singList[1])
 
@@ -671,10 +713,14 @@ def addFactAre(subClass, superClass):
 # This function is needed because Y is singular
 # subClass is the lower class (I.E fido)
 # superClass is the more general category (I.E Dog in this case)
-def addFactIsA(person, superClass):
+def addFactIs(person, superClass):
     # call helper function to add fact into database, no change needed
     addFact(person, superClass)
-
+    # whether or not a new fact was added, it should ask what are Ys
+    # since asking about X can only go in one direction and the other
+    # AI might just repeat X is a Y which is something we don't want
+    # We could/should ask about plurals here instead
+    return relatedAreQuestion(superClass)
 
 
 
@@ -691,46 +737,34 @@ def addFactIsA(person, superClass):
 # when the other AI is confused after hearing a fact. it gives up after 3 tries
 def clarify_confused():
     global clarify_count
-    # gives a related fact
-    # gives the next thing X is on its list of values
-    values = KB.get(x)
-    y = []
-    # Y's location in the input
-    if len(prev_output) == 3: # X are Y
-        y = prev_output[2]
-    else: # X is a Y
-        y = prev_output[3]
-    # iterate through values of the key
-    for index in range(0, len(values)):
-        # if this was the value (Y) that was given
-        if values[index] == y:
-            # allows us to modify global variables
-            global fact_key
-            global fact_value
-            # if there are more things this object is
-            if index+1 < len(values): # check boundary:
-                #--> requires form changing <--
-                print(prev_output[0] + "are" + values[index+1])             
-                # set new output
-                prev_output = [prev_output[0], 'are', values[index+1]]
-                fact_value += 1
-            # if there are no more things this object is
-            # look for a super class of Y
-            else:
-                # get values for y
-                values2 = KB.get(y)
-                # if there are no super class of Y
-                if values2 == None:
-                    # just give another fact
-                    fact_key += 1
-                    fact_value = 0
-                    giveFact()
-                # give a fact about the super class
-                else:
-                    print(y + "are" + values2[0])
-                    # update previously given output
-                    prev_output = [y, 'are', values2[0]]
-            break # break out of loop
+    global prev_output
+    # variables to hold all the information
+    people = []
+    categories = []
+    # gives a related fact depending on the form of the fact give
+    # if fact is of the form X is a Y
+    # Note answering what question doesn't give more than one answer
+    # so it doesn't have to handle forms that have more than 1 Y at the moment
+    if prev_output[1] == 'is' and (prev_output[2]=='a' or prev_output[2]=='an'):
+        # give the next fact (which is usually related)
+        giveFact()
+    # if fact is of the form X are Ys
+    elif prev_output[1] == 'are':
+        line = prev_output[0].split()
+        # check this form has multiple subjects
+        if len(line) > 1:
+            parseAre(output[0],people,categories)
+            # use one of the people from people list
+            prev_output = [people[0], 'are', prev_output[2]]
+            print_list(prev_output)
+        # this form is literally X are Ys
+        else:
+            giveFact()
+            # ask a related are question
+            #answer = relatedAreQuestion(prev_output[0],prev_output[2])
+            # need this so prev_output doesnt get over written too early
+            #prev_output = answer
+            #print_list(prev_output)
     clarify_count += 1 # increment try counter
 
 
@@ -743,59 +777,54 @@ def clarify_unsure():
     global prev_output
     clarify_count += 1
     # If other AI is unsure who is a/an X, our AI should answer the question
-    if prev_output[0] == 'who' and prev_output[1] == 'is':
+    if prev_output[0] == 'Who' and prev_output[1] == 'is':
         # answer the question
         answer = checkWhoQuestion(prev_output[3])
         # if no answer was found
-        if answer[0] == 'i' and answer[1] == 'am' and answer[2] == 'unsure':
+        if answer[0] == 'I' and answer[1] == 'am' and answer[2] == 'unsure':
             # ask a related question
-            answer = relatedToWhoQuestion(prev_output[3])
-        # give answer
-        else:
-            # ===== >NEED TO FIX ALL PRINT STATMENTS!!!!! <=================
-            print(answer[0] + " is a " + answer[3])
-            prev_output = [answer[0], 'is', 'a', answer[3]]
+            answer = relatedToWhoQuestion(prev_output[3],a_an)
+        # print response
+        prev_output = answer
+        print_list(answer)
             
-    # If other AI is unsure what is X, our AI will answer the question
-    elif prev_output[0] == 'what' and prev_output[1] == 'is':
+    # If other AI is unsure what is/are X, our AI will answer the question
+    elif prev_output[0]=='What'and(prev_output[1]=='is'or prev_output[1]=='are'):
         # answer the question
-        answer = checkWhatQuestion(prev_output[3])
+        answer = checkWhatQuestion(prev_output[2])
         # if no answer was found
-        if answer[0] == 'i' and answer[1] == 'am' and answer[2] == 'unsure':
-            answer = relatedWhatQuestion(prev_output[3])
-        # give answer
-        else:
-            print(answer[0] + " is a " + answer[3])
-            prev_output = [answer[0], answer[1], answer[2], answer[3]]
+        if answer[0] == 'I' and answer[1] == 'am' and answer[2] == 'unsure':
+            answer = guessAreQuestion(prev_output[2])
+        # print response
+        prev_output = answer
+        print_list(answer)
             
     # If other AI is unsure if X is a Y
-    elif prev_output[0] == 'is':
+    elif prev_output[0]=='Is': #and (prev_output[2]=='a' or prev_output[2]=='an'):
         # answer the question
         answer = checkIsQuestion(prev_output[1], prev_output[3], prev_output[2])
         # if no answer was found
-        if answer[0] == 'i' and answer[1] == 'am' and answer[2] == 'unsure':
+        if answer[0] == 'I' and answer[1] == 'am' and answer[2] == 'unsure':
             # give related question
-            relatedToIsQuestion(prev_output[1],prev_output[3])
-        # give answer
-        else:
-            print(answer[0] + " is a " + answer[3])
-            prev_output = [answer[0], 'is', 'a', answer[3]]
+            answer = relatedToIsQuestion(prev_output[1],prev_output[3])
+        # print response
+        prev_output = answer
+        print_list(answer)
             
     # If other AI is unsure if X are Y's
-    elif prev_output[0] == 'are':
+    elif prev_output[0] == 'Are':
         # answer the question
         answer = checkAreQuestion(prev_output[1], prev_output[2])
         # if no answer was found
-        if answer[0] == 'i' and answer[1] == 'am' and answer[2] == 'unsure':
+        if answer[0] == 'I' and answer[1] == 'am' and answer[2] == 'unsure':
             # give related question
-            relatedAreQuestion(prev_output[1], prev_output[2])
-        # give answer
-        else:
-            print(answer[0] + " are " + answer[2])
-            prev_output = [answer[0], 'are', answer[2]]
-    # program should never get here; need to remove later
+            answer = guessAreQuestion(prev_output[2])
+        # print response
+        prev_output = answer
+        print_list(answer)
+        
+    # if you are here, then other AI is unsure of a fact
     else:
-        print("if you are here, then other AI is unsure of a fact")
         clarify_confused()
 
 
@@ -807,36 +836,65 @@ def clarify_unsure():
 # Main function and helper functions that help parse the input
 # ------------------------------------------------------------------------------
 
+# a function that parses the the line and stores the nouns/people/things
+# into a list that is passed by a parameter.
+# people is a list of people or things with names
+# categories are the general categories of things (I.E. dog)
+# this is for inputs of the form X is a Y and Z (or Y, Z, and V (etc))
+def parseIs(line, people, categories):
+    # there should only be one subject
+    people.append(line[0])
+    # iterate through line list and get all categories
+    for index in range(3, len(line)):
+        # if this word is 'a' do nothing
+        if line[index] == 'a':
+            continue #do nothing
+        # if this word is 'and', we only have one more category to add
+        elif line[index] == 'and':
+            # the location of this category in the list is 2 spaces ahead
+            categories.append(word)
+            break
+        # any other word is added as a category
+        else:
+            # removed the comma if it contains it
+            word = remove_punc(line[index])
+            categories.append(word)
+
+# a function that parses the the line and stores the nouns/people/things
+# into a list that is passed by a parameter.
+# people is a list of people or things with names
+# categories are the general categories of things (I.E. dog)
+# this is for inputs of the form X is a Y and Z (or Y, Z, and V (etc))
+def parseAre(line, people, categories):
+    # stores all the people into the list of people
+    for index in range(0,len(line)-1):
+        # if this part of the line says 'and
+        if line[index] == 'and':
+            # add the last person to the list (which is the next word)
+            people.append(line[index+1])
+            break # stop looking for people
+        else:
+            # remove any puncations associated with the name
+            person = remove_punc(line[index])
+            people.append(person)
+    # stores the category into the list
+    categories.append(line[len(line)-1])
+    
+
 # A function that process the input depending on new restrictions
 # If the program reaches here then either malformed input was recieved
 # or input with more than one subject was recieved
+# breaks on trick inputs (I.E using is/a/and/are as names will cause confusion)
 # Example form:  Josh is a student and a TA
 # Example Form2: Josh and Emily are TAs
 def process_input2(line):
     people = []
     categories = []
+    query = [] # question that will be asked about a fact recieved
     new_fact = [] # remembers a new fact that has been added
     # check if line contains is
     if line[1] == 'is' and line[2] == 'a' and ('and' in line):
-        # there should only be one subject
-        people.append(line[0])
-        # iterate through line list and get all categories
-        for index in range(3, len(line)):
-            # if this word is 'a' do nothing
-            if line[index] == 'a':
-                continue #do nothing
-            # if this word is 'and', we only have one more category to add
-            elif line[index] == 'and':
-                # remove the period if it contains it
-                word = remove_punc(line[index+2])
-                # the location of this category in the list is 2 spaces ahead
-                categories.append(word)
-                break
-            # any other word is added as a category
-            else:
-                # removed the comma if it contains it
-                word = remove_punc(line[index])
-                categories.append(word)
+        parseIs(line, people, categories)
         # after everything has been added, add all these facts to DB
         # directly, so it doesnt give a response
         for index in range(0, len(categories)-1):
@@ -844,83 +902,97 @@ def process_input2(line):
             # if fact was not known, then it was inserted
             if inserted:
                 new_fact = [people[0], categories[index]]
+        # if no new facts were given, then ask a question about an old fact
+        plural = convert([categories[0]], 'S')
+        new_fact = [people[0], plural[0]]
         # give a related query to a new fact that has been added
-        relatedToIsQuestion(new_fact[0], new_fact[1])
+        query = relatedAreQuestion(new_fact[1])
 
     # if line has an 'are' in it (josh and emily are TAs)
     elif line[len(line)-2] == 'are' and ('and' in line):
         # there are more than one subject but only one category
-        # stores all the people into the list of people
-        for index in range(0,len(line)-1):
-            # if this part of the line says 'and
-            if line[index] == 'and':
-                # add the last person to the list (which is the next word)
-                people.append(line[index+1])
-                break # stop looking for people
-            else:
-                # remove any puncations associated with the name
-                person = remove_punc(line[index])
-                people.append(line[index])
-        # stores the category into the list
-        categories.append(line[len(line)-1])
+        parseAre(line, people, categories)
         # add all the facts into DB
         for index in range(0,len(people)-1):
             inserted = addFact(people[index],categories[0])
             if inserted:
                 new_fact = [people[index], categories[0]]
         # give a related query to the new fact that has been added
-        relatedAreQuesion(new_fact[0], new_fact[1])
+        query = relatedAreQuestion(new_fact[0], new_fact[1])
 
     # all other input are considered malform input
     else:
-        global prev_output
-        prev_output = ['i', 'am', 'confused']
-        print("I am confused")
+        query = ['i', 'am', 'confused']
+    # update prev_output and print query
+    global prev_output
+    prev_output = query
+    print_list(query)
                 
 
 # A function that handles inputs of length 4
 def process_input4(AI_Input):
+    global prev_output
+    response = []
     # if input is of the form who is a/an Y
-    if AI_Input[0] == 'who' and AI_Input[1] == 'is':
+    if AI_Input[0] == 'Who' and AI_Input[1] == 'is':
         # had to put rest of conditional on a new line
         if AI_Input[2] == 'a' or AI_Input[2] == 'an':
-            answer = checkWhoQuestion(AI_Input[3])
+            response = checkWhoQuestion(AI_Input[3])
         # Print statement here because it skips the other one at
         # end in case of malform input
         else:
-            print("I am confused")
+            response = ['I', 'am', 'confused']
     # if input is of the form X is a/an Y
     elif AI_Input[1] == 'is' and (AI_Input[2] == 'a' or AI_Input[2] == 'an'):
         # helper function that adds the fact to KB if not known
-        addFactIs(AI_Input[0], AI_Input[3])
+        response = addFactIs(AI_Input[0], AI_Input[3])
     # if input is of the form is X a/an Y
-    elif AI_Input[0] == 'is' and (AI_Input[2]== 'a' or AI_Input[2] == 'an'):
-        #print("is X a/an Y")
-        checkIsQuestion(AI_Input[1], AI_Input[3], AI_Input[2])
+    elif AI_Input[0] == 'Is' and (AI_Input[2]== 'a' or AI_Input[2] == 'an'):
+        response = checkIsQuestion(AI_Input[1], AI_Input[3], AI_Input[2])
     # print confused if input of length 4 is malformed
     else:
-        print("I am confused")
+        response = ['I', 'am', 'confused']
+    prev_output = response
+    print_list(response)
 
 # A function that handles inputs of length 3
 def process_input3(AI_Input):
-    # if input is of the form what is X
-    if AI_Input[0] == 'what' and AI_Input[1] == 'is':
-        print("what is X")
+    global prev_output
+    response = []
+    # if input is of the form what is/are X
+    if AI_Input[0] == 'What':
+        # if form is what is X
+        if AI_Input[1] == 'is':
+            response = checkWhatQuestion(AI_Input[2])
+        # if form is what are X
+        elif AI_Input[1] == 'are':
+            # switch from plural to singular
+            singular = convert([AI_Input[2]], 'P')
+            response = checkWhatQuestion(singular[0])
+        # form is malformed
+        else:
+            response = ['I', 'am', 'confused']
+    # if input is of the form Who are Xs
+    elif AI_Input[0] == 'Who' and AI_Input[1] == 'are':
+        # convert X to a singular
+        singular = convert([AI_Input[2]], 'P')
+        response = checkWhoQuestion(singular[0])
     # if input is of the form are X Ys
-    elif AI_Input[0] == 'are':
-        print("are X Ys")
+    elif AI_Input[0] == 'Are':
+        response = checkAreQuestion(AI_Input[1], AI_Input[2])
     # if input is of the form X are Y
     elif AI_Input[1] == 'are':
-        print("Xs are Ys")
         # Add fact to KB if not known
-        addFactAre(AI_Input[0], AI_Input[2])
+        response = addFactAre(AI_Input[0], AI_Input[2])
     # if input is "I am leaving."
     elif AI_Input[0] == 'I' and AI_Input[1] == 'am' and AI_Input[2] == 'leaving':
         print("I am leaving")
         sys.exit() # exit program (Need a better way)
     # print confused for outer if statement
     else:
-        print("I am confused")
+        response = ['I', 'am', 'confused']
+    prev_output = response
+    print_list(response)
 
 # A function that calls the appropriate functions according to the input and
 # determines what it is being told/asked
@@ -941,6 +1013,8 @@ def process_input(line):
 
     # parse the line and check what is being asked or told
     input1 = line.split()
+    # removes puncuation from last word
+    input1[len(input1)-1] = remove_punc(input1[len(input1)-1])
     length = len(input1)
     # allows us to change global variables
     global clarify_count
@@ -994,13 +1068,17 @@ def main():
 
     global output # tells program to use global variable
     # start by give a fact
-    giveFact() # fact holder
+    giveFact()
     output += 1 # increment output counter
     # process each line from standard input
     for line in sys.stdin:
         process_input(line)
-
         output += 1 # increment output counter
+
+        # test to make sure prev_output is updating correctly
+        print("printing previous to make sure its updating")
+        print_list(prev_output)
+        
         # terminate program when at least 20 outputs are given
         if output > 20:
             print("I am leaving.")
