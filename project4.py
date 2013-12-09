@@ -133,8 +133,8 @@ def update_plurals(single,plural):
     '''
     appends new item to the plural list
     '''
-    if nouns.count([single,plural]) == 0:
-        nouns.append([single,plural])
+    #if nouns.count([single,plural]) == 0:
+    nouns.append([single,plural])
 
 def update_adjectives(adj):
     '''
@@ -197,7 +197,10 @@ def update_KB_is(thing, what_thing_is):
     
     #appends related information with new information
     for key in KB.keys():
-        
+
+        if key == thing and KB.get(key)[0].count(what_thing_is) > 0:
+            added = False
+            
         #adds what_thing_is if thing is already in the knowledge base
         if key == thing and KB.get(key)[0].count(what_thing_is) == 0:
             KB.get(key)[0].append(what_thing_is)
@@ -206,9 +209,6 @@ def update_KB_is(thing, what_thing_is):
             append_sublist(sublist_verb,KB.get(key)[2])
             append_sublist(sublist_prep,KB.get(key)[3])
             append_sublist(sublist_poss,KB.get(key)[4])
-        
-        if key == thing and KB.get(key)[0].count(what_thing_is) > 0:
-            added = False
             
         #updates everything that is a thing with thing's information
         if KB.get(key)[0].count(thing) > 0:
@@ -606,7 +606,7 @@ def guessAreQuestion(aThing):
     # get the keys
     keys = list(KB.keys())
     # pick a key that is a category
-    key = keys[random.randint(0,len(keys))]
+    key = keys[random.randint(0,len(keys)-1)]
     while not (key in category):
         key = keys[random.randint(0,len(keys))]
     # key needs to be changed to plural since this is an are question
@@ -682,22 +682,6 @@ def giveFact():
         if fact_key > len(keys)-1:
             fact_key = 0 # start from very beginning
 
-# This helper function adds the fact into the database
-# Note: all facts are stored as singular!
-def addFact(subClass, superClass):
-    # check if the key exists
-    keys = list(KB.keys())
-    if subClass in keys:
-        # check if the superClass is already associated with subClass
-        properties = KB[subClass]
-        values = properties[0]
-        if superClass in values:
-            # do not add fact and return false
-            return False
-    # add this to the KB
-    update_KB_is(subClass, superClass)
-    return True
-
 # This function stores a fact of the form Xs are Ys
 # This function is needed because X and Y are plural
 # subClass is the lower class (I.E dogs)
@@ -706,7 +690,9 @@ def addFactAre(subClass, superClass):
     # change subClass and superClass into singular nouns
     # >>>NOTE: need to catch adjectives somehow!
     singList = convert([subClass, superClass], 'P')
-    addFact(singList[0], singList[1])
+    # inserted is true if fact was added
+    plural = convert([superClass], 'S')
+    return relatedAreQuestion(plural[0])
 
 
 # This function stores fact of the form X is a Y
@@ -715,12 +701,14 @@ def addFactAre(subClass, superClass):
 # superClass is the more general category (I.E Dog in this case)
 def addFactIs(person, superClass):
     # call helper function to add fact into database, no change needed
-    addFact(person, superClass)
+    inserted = update_KB_is(person, superClass)
     # whether or not a new fact was added, it should ask what are Ys
     # since asking about X can only go in one direction and the other
     # AI might just repeat X is a Y which is something we don't want
     # We could/should ask about plurals here instead
-    return relatedAreQuestion(superClass)
+    # convert to plural
+    plural = convert([superClass], 'S')
+    return relatedAreQuestion(plural[0])
 
 
 
@@ -785,8 +773,10 @@ def clarify_unsure():
             # ask a related question
             answer = relatedToWhoQuestion(prev_output[3],a_an)
         # print response
-        prev_output = answer
         print_list(answer)
+        prev_output = answer
+        prev_output[len(prev_output)-1] = remove_punc(prev_output[len(prev_output)-1])
+        
             
     # If other AI is unsure what is/are X, our AI will answer the question
     elif prev_output[0]=='What'and(prev_output[1]=='is'or prev_output[1]=='are'):
@@ -796,8 +786,9 @@ def clarify_unsure():
         if answer[0] == 'I' and answer[1] == 'am' and answer[2] == 'unsure':
             answer = guessAreQuestion(prev_output[2])
         # print response
-        prev_output = answer
         print_list(answer)
+        prev_output = answer
+        prev_output[len(prev_output)-1] = remove_punc(prev_output[len(prev_output)-1])
             
     # If other AI is unsure if X is a Y
     elif prev_output[0]=='Is': #and (prev_output[2]=='a' or prev_output[2]=='an'):
@@ -808,8 +799,9 @@ def clarify_unsure():
             # give related question
             answer = relatedToIsQuestion(prev_output[1],prev_output[3])
         # print response
-        prev_output = answer
         print_list(answer)
+        prev_output = answer
+        prev_output[len(prev_output)-1] = remove_punc(prev_output[len(prev_output)-1])
             
     # If other AI is unsure if X are Y's
     elif prev_output[0] == 'Are':
@@ -820,8 +812,9 @@ def clarify_unsure():
             # give related question
             answer = guessAreQuestion(prev_output[2])
         # print response
-        prev_output = answer
         print_list(answer)
+        prev_output = answer
+        prev_output[len(prev_output)-1] = remove_punc(prev_output[len(prev_output)-1])
         
     # if you are here, then other AI is unsure of a fact
     else:
@@ -898,7 +891,7 @@ def process_input2(line):
         # after everything has been added, add all these facts to DB
         # directly, so it doesnt give a response
         for index in range(0, len(categories)-1):
-            inserted = addFact(people[0], categories[index])
+            inserted = update_KB_is(people[0], categories[index])
             # if fact was not known, then it was inserted
             if inserted:
                 new_fact = [people[0], categories[index]]
@@ -914,11 +907,11 @@ def process_input2(line):
         parseAre(line, people, categories)
         # add all the facts into DB
         for index in range(0,len(people)-1):
-            inserted = addFact(people[index],categories[0])
+            inserted = update_KB_is(people[index],categories[0])
             if inserted:
                 new_fact = [people[index], categories[0]]
         # give a related query to the new fact that has been added
-        query = relatedAreQuestion(new_fact[0], new_fact[1])
+        query = relatedAreQuestion(new_fact[1])
 
     # all other input are considered malform input
     else:
@@ -993,6 +986,7 @@ def process_input3(AI_Input):
         response = ['I', 'am', 'confused']
     prev_output = response
     print_list(response)
+    response[len(response)-1] = remove_punc(response[len(response)-1])
 
 # A function that calls the appropriate functions according to the input and
 # determines what it is being told/asked
@@ -1065,7 +1059,7 @@ def process_input(line):
 def main():
 
     """ The main loop of your program. """
-
+   
     global output # tells program to use global variable
     # start by give a fact
     giveFact()
@@ -1083,7 +1077,6 @@ def main():
         if output > 20:
             print("I am leaving.")
             break
-
     
 # This executes main() if project4.py was executed at the shell.
 # Otherwise, main() will not be called (useful for debugging)..
