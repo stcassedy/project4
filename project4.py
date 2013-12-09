@@ -180,7 +180,7 @@ def update_KB_is(thing, what_thing_is):
     
     '''
     #gets sublist of what_thing_is
-    found_thing = False
+    added = True
     sublist_is = []
     sublist_adj = []
     sublist_verb = []
@@ -199,6 +199,8 @@ def update_KB_is(thing, what_thing_is):
     
     #appends related information with new information
     for key in KB.keys():
+        
+        #adds what_thing_is if thing is already in the knowledge base
         if key == thing and KB.get(key)[0].count(what_thing_is) == 0:
             KB.get(key)[0].append(what_thing_is)
             append_sublist(sublist_is,KB.get(key)[0])
@@ -206,14 +208,21 @@ def update_KB_is(thing, what_thing_is):
             append_sublist(sublist_verb,KB.get(key)[2])
             append_sublist(sublist_prep,KB.get(key)[3])
             append_sublist(sublist_poss,KB.get(key)[4])
+        
+        if key == thing and KB.get(key)[0].count(what_thing_is) > 0:
+            added = False
+            
+        #updates everything that is a thing with thing's information
         if KB.get(key)[0].count(thing) > 0:
-            print(KB.get(key)[0])
             KB.get(key)[0].append(what_thing_is)
             append_sublist(sublist_is,KB.get(key)[0])
             append_sublist(sublist_adj,KB.get(key)[1])
             append_sublist(sublist_verb,KB.get(key)[2])
             append_sublist(sublist_prep,KB.get(key)[3])
             append_sublist(sublist_poss,KB.get(key)[4])
+    
+    #returns if KB was updated or not
+    return added
 
 def update_KB_adj(thing,adj):
     '''
@@ -619,42 +628,34 @@ def giveFact():
 
 # This helper function adds the fact into the database
 # Note: all facts are stored as singular!
-def addFact(subClass, superClass):
-    added = False # flag to check whether to ask a query at the end
-    # Look for the subClass in the KB
-    # things is everything the person or thing is
-    for name, things in KB.items():
-        # if found, check if the superclass is attached to the subclass
-        if name == subClass:
-            if superClass in things: 
-                added = True
-                # if fact is known, then give new fact or query
-                if random.randint(0,1):
-                    # give a fact
-                    giveFact()
-                else:
-                    #randomly create a query
-                    temp = random.sample( KB.keys(),1)
-                    print("what is "+temp[0]+"?")
+def addFactIs(subClass, superClass):
+    #updates the KB if necessary
+    #returns true or false depending on whether KB is updated
+    added = update_KB_is(subClass, superClass)
+    
+    #determines if we already know the plural of the superclass
+    plural_known = False
+    for noun in nouns:
+        if noun[0] == superClass:
+            plural_known = True
+    
+    if plural_known:
+        #continues if the plural is known
+        if added:
+            #not sure what we want to do in this situation
+            giveFact() #temporary
+        else:  
+            #fact already known (this works the same as before)
+            if random.randint(0,1):
+                # give a fact
+                giveFact()
             else:
-                added = True
-                temp = KB[subClass]
-                temp.append(superClass)
-                KB[subClass] = temp
-                print("what is the plural of "+ superClass +"?") #temporary
-                # if fact is not known, attach it to the subclass
-                # check whether superClass is a noun/adjective, why?
-                # give related query (who question related to superclass)
-    # if the subClass was not found as the starting as the "key" add to KB
-    if not added:
-        KB[subClass] = superClass.split() #add it as a list
-        print("what is the plural of "+ superClass +"?") #temporary
-        # add to KB
-        # check whether superClass is a noun/adjective
-        # switch to subclass to plural
-        # ask what are "subClass" if not known, (maybe say who is a superclass
-        # if it knows what the subclass is
-        
+                #randomly create a query
+                temp = random.sample( KB.keys(),1)
+                print("what is "+temp[0]+"?")
+    else:
+        #asks for the plural if the plural is not known
+        print("what is the plural of "+ superClass +"?")
 
 # This function stores a fact of the form Xs are Ys
 # This function is needed because X and Y are plural
