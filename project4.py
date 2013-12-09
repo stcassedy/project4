@@ -180,7 +180,7 @@ def update_KB_is(thing, what_thing_is):
     
     '''
     #gets sublist of what_thing_is
-    added = true
+    added = True
     sublist_is = []
     sublist_adj = []
     sublist_verb = []
@@ -210,7 +210,7 @@ def update_KB_is(thing, what_thing_is):
             append_sublist(sublist_poss,KB.get(key)[4])
         
         if key == thing and KB.get(key)[0].count(what_thing_is) > 0:
-            added = false
+            added = False
             
         #updates everything that is a thing with thing's information
         if KB.get(key)[0].count(thing) > 0:
@@ -628,16 +628,16 @@ def giveFact():
 
 # This helper function adds the fact into the database
 # Note: all facts are stored as singular!
-def addFact(subClass, superClass):
+def addFactIs(subClass, superClass):
     #updates the KB if necessary
     #returns true or false depending on whether KB is updated
     added = update_KB_is(subClass, superClass)
     
     #determines if we already know the plural of the superclass
-    plural_known = false
+    plural_known = False
     for noun in nouns:
         if noun[0] == superClass:
-            plural_known = true
+            plural_known = True
     
     if plural_known:
         #continues if the plural is known
