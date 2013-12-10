@@ -753,7 +753,6 @@ def addFactAre(subClass, superClass):
     update_categories(singList[0])
     #plural = convert([superClass], 'S')
     plural = convert([singList[1]], 'S')
-    print(KB)
     return relatedAreQuestion(plural[0])
 
 
@@ -771,7 +770,6 @@ def addFactIs(person, superClass):
     # We could/should ask about plurals here instead
     # convert to plural
     plural = convert([superClass], 'S')
-    print(KB)
     return relatedAreQuestion(plural[0])
 
 # update the number Knowledge Base
