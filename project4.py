@@ -1077,6 +1077,9 @@ def process_input4(AI_Input):
         # end in case of malform input
         else:
             response = ['I', 'am', 'confused.']
+    # if input is of the form What is a/an X
+    elif AI_Input[0] == 'What' and AI_Input[1] == 'is' and (AI_Input[2] == 'a' or AI_Input[2] == 'an'):
+        response = checkWhatQuestion(AI_Input[3])
     # if input is of the form X is a/an Y
     elif AI_Input[1] == 'is' and (AI_Input[2] == 'a' or AI_Input[2] == 'an'):
         # helper function that adds the fact to KB if not known
