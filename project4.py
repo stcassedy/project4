@@ -198,7 +198,7 @@ def update_KB_is(thing, what_thing_is):
             
     #adds new item to KB
     if not (thing in KB):
-        KB[thing] = [[thing],[],[],[],[]]
+        KB[thing] = [[],[],[],[],[]]
     
     #appends related information with new information
     for key in KB.keys():
