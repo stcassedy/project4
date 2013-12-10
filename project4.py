@@ -760,6 +760,7 @@ def addFactAre(subClass, superClass):
 def addFactIs(person, superClass):
     # call helper function to add fact into database, no change needed
     inserted = update_KB_is(person, superClass)
+    update_names(person)
     # whether or not a new fact was added, it should ask what are Ys
     # since asking about X can only go in one direction and the other
     # AI might just repeat X is a Y which is something we don't want
