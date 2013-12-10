@@ -402,6 +402,7 @@ def checkIsQuestion(name, a_an, aThing):
 
 
   
+ 
 
 ########################################################
 #reply for who question
@@ -410,7 +411,7 @@ def checkWhoQuestion(is_are,a_an,word):
     count=0
     ct=0
     output=[]
-    temp_reselt='';
+    temp_result='';
     correct_answer=[]
     properties=[]
     for name, value in KB.items():
@@ -442,20 +443,22 @@ def checkWhoQuestion(is_are,a_an,word):
                 
             while(ct !=count):
                 if(ct == count-1):
-                    temp_reselt+=( ' and ' )
-                    #output.append( ' and ' )
-                    temp_reselt+=correct_answer.pop(0)
-                    #output.append(correct_answer.pop(0))
+                    temp_result+=( ' and ' )
+                    temp_result+=correct_answer.pop(0)
+                   
+                
                 else:
-                    temp_reselt+=( ', ' )
-                    #output.append(', ')
-                    temp_reselt+=correct_answer.pop(0)
-                    #output.append(correct_answer.pop(0))
+                    if(ct==0):
+                        temp_result+=('')
+                    else:
+                        temp_result+=( ', ' )
+                   
+                    temp_result+=correct_answer.pop(0)
+                    
                 ct+=1
                 
-            temp_reselt+=' are '+ word+'s.'
-            
-            output=temp_reselt.split(',')
+            temp_result+=' are '+ word+'s.'
+            output=temp_result.split(',')
             return  output  
 # if kb doesn't have the fact, ask a related query
     if(output==[]):
@@ -466,6 +469,7 @@ def checkWhoQuestion(is_are,a_an,word):
        else:
             return ['I', 'am', 'unsure']
        
+ 
    
 ########################################################
 
