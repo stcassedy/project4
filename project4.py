@@ -32,7 +32,7 @@ prev_output = []
 askedWhoQ=[]
 askedIsQ= []
 askedWhatQ= []
-a_an="a/an" # it needs to be one or the other in the correct circumstance
+#a_an="a/an" # it needs to be one or the other in the correct circumstance
 
 ################################################################################
 '''
@@ -360,58 +360,107 @@ def remove_punc(word):
 
 ###########################################################
 
+'''
+def pickRandomRelatedQuestion(){
+    rand= random.randint(0,3)
+    if(rand==0): relatedToIsQuestion(x_value, y_value):
+    if(rand==1):relatedToIsQuestion()
+    if(rand==2):relatedToIsQuestion()
+    if(rand==3):relatedToIsQuestion()
+
+    }
+    '''
 #reply for isQuestion 
 
-def checkIsQuestion(rand_name, word, a_an):
+def checkIsQuestion(name, a_an, aThing):
+    
     check=False
     values=[]
-    values= KB.get(rand_name)
+    if name in individual:
+        values= KB[name][0]
     if(values is not None):
+        
         for ele in values:
-            if word == ele:
+            if aThing == ele:
                 check=True
-                word2 = word+'.'
-                return [rand_name,'is',a_an ,word2]
+                aThing2 = aThing+'.'
+                return [name,'is',a_an ,aThing2]
 # if kb doesn't have the fact, ask a related query
     if (check==False):  
         # 50/50 chance to give related query or respond I am unsure
-        return ['I', 'am', 'unsure']
+        rand= random.randint(0,1)
+        if(rand==0):
+            return relatedToIsQuestion(name,a_an,aThing)
+        else:
+            return ['I', 'am', 'unsure']
+        
+
+
+  
 
 ########################################################
 #reply for who question
 
-def checkWhoQuestion(word):
-    check=False
+def checkWhoQuestion(is_are,a_an,word):
     count=0
     ct=0
     output=[]
+    temp_reselt='';
     correct_answer=[]
+    properties=[]
     for name, value in KB.items():
-        if word in value:
-            correct_answer.append(name)     
-            count+=1
+       
+        #properties=value[0]
+        if word in value[0]:
+            if name in individual:
+                correct_answer.append(name)
+                #print(correct_answer)
+                count+=1
 
     if(count !=0):
         if(count ==1):
-              
+            # if there are several answers for who is a Y, we just pick the first one
+            if(is_are=='are'):
                 output= [correct_answer.pop(0)]
                 word2 = word+'.'
-                return [output,'is','a',word2]
+                return [output[0],'is','a',word2]
+            else:
+                output= [correct_answer.pop(0)]
+                word2 = word+'.'
+                return [output[0],'is',a_an,word2]
         else:
+            # if there are several answers for who is a Y, we just pick the first one
+            if(is_are=='is'):
+                output= [correct_answer.pop(0)]
+                word2 = word+'.'
+                return [output[0],'is',a_an,word2]
+                
             while(ct !=count):
                 if(ct == count-1):
-                    output+=' and '
-                    output +=correct_answer.pop(0)
+                    temp_reselt+=( ' and ' )
+                    #output.append( ' and ' )
+                    temp_reselt+=correct_answer.pop(0)
+                    #output.append(correct_answer.pop(0))
                 else:
-                    output +=', '
-                    output += correct_answer.pop(0)
+                    temp_reselt+=( ', ' )
+                    #output.append(', ')
+                    temp_reselt+=correct_answer.pop(0)
+                    #output.append(correct_answer.pop(0))
                 ct+=1
-            word+='s'
-            return [output,'are',word2]   
+                
+            temp_reselt+=' are '+ word+'s.'
+            
+            output=temp_reselt.split(',')
+            return  output  
 # if kb doesn't have the fact, ask a related query
     if(output==[]):
        # 50/50 chance to ask question or reply i am unsure
-        return ['I', 'am', 'unsure']
+       rand= random.randint(0,1)
+       if(rand==0):
+            return relatedToWhoQuestion(a_an,word)
+       else:
+            return ['I', 'am', 'unsure']
+       
    
 ########################################################
 
@@ -501,7 +550,7 @@ def checkAreQuestion(aThing, inCategory):
 # note if recieving fact is should ask a follow up question
 # like who is a Y (which it does not)
 
-def relatedToIsQuestion(x_value, y_value):
+def relatedToIsQuestion(x_value,a_an, y_value):
     rand= random.randint(0,1)
     if(rand==0):
         word = x_value+'?'
@@ -526,7 +575,7 @@ def relatedToIsQuestion(x_value, y_value):
 # The AI will take a guess, so it will ask "is X a/an Y"
 # where X is a randomly chosen specific person or thing
 
-def relatedToWhoQuestion(a_object, a_an): 
+def relatedToWhoQuestion(a_an,a_object): 
     rand= random.randint(0,len(individual)-1)
    
     #pick a random number from individual
@@ -548,7 +597,7 @@ def relatedToWhoQuestion(a_object, a_an):
        flag= currQuest in askedIsQ
 
     word = a_object+'?'
-    return ['Is', rand_name, 'a/an',word]
+    return ['Is', rand_name, 'a',word]
     askedIsQ.append(currQuest)
 
 
@@ -767,11 +816,11 @@ def clarify_unsure():
     # If other AI is unsure who is a/an X, our AI should answer the question
     if prev_output[0] == 'Who' and prev_output[1] == 'is':
         # answer the question
-        answer = checkWhoQuestion(prev_output[3])
+        answer = checkWhoQuestion(prev_output[1], prev_output[2],prev_output[3])
         # if no answer was found
         if answer[0] == 'I' and answer[1] == 'am' and answer[2] == 'unsure':
             # ask a related question
-            answer = relatedToWhoQuestion(prev_output[3],a_an)
+            answer = relatedToWhoQuestion(prev_output[2],prev_output[3])
         # print response
         print_list(answer)
         prev_output = answer
@@ -793,7 +842,7 @@ def clarify_unsure():
     # If other AI is unsure if X is a Y
     elif prev_output[0]=='Is': #and (prev_output[2]=='a' or prev_output[2]=='an'):
         # answer the question
-        answer = checkIsQuestion(prev_output[1], prev_output[3], prev_output[2])
+        answer = checkIsQuestion(prev_output[1], prev_output[2],prev_output[3])
         # if no answer was found
         if answer[0] == 'I' and answer[1] == 'am' and answer[2] == 'unsure':
             # give related question
@@ -930,7 +979,7 @@ def process_input4(AI_Input):
     if AI_Input[0] == 'Who' and AI_Input[1] == 'is':
         # had to put rest of conditional on a new line
         if AI_Input[2] == 'a' or AI_Input[2] == 'an':
-            response = checkWhoQuestion(AI_Input[3])
+            response = checkWhoQuestion(AI_Input[1],AI_Input[2],AI_Input[3])
         # Print statement here because it skips the other one at
         # end in case of malform input
         else:
@@ -941,7 +990,7 @@ def process_input4(AI_Input):
         response = addFactIs(AI_Input[0], AI_Input[3])
     # if input is of the form is X a/an Y
     elif AI_Input[0] == 'Is' and (AI_Input[2]== 'a' or AI_Input[2] == 'an'):
-        response = checkIsQuestion(AI_Input[1], AI_Input[3], AI_Input[2])
+        response = checkIsQuestion(AI_Input[1],AI_Input[2], AI_Input[3])
     # print confused if input of length 4 is malformed
     else:
         response = ['I', 'am', 'confused']
@@ -969,7 +1018,7 @@ def process_input3(AI_Input):
     elif AI_Input[0] == 'Who' and AI_Input[1] == 'are':
         # convert X to a singular
         singular = convert([AI_Input[2]], 'P')
-        response = checkWhoQuestion(singular[0])
+        response = checkWhoQuestion(AI_Input[1],'',singular[0])
     # if input is of the form are X Ys
     elif AI_Input[0] == 'Are':
         response = checkAreQuestion(AI_Input[1], AI_Input[2])
