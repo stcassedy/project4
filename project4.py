@@ -88,7 +88,7 @@ Adverbs = []
 Prepositions = []
 
 #list of the knowledge base
-#[thing,list of what thing is,list of what is not]
+#KB  = {[nouns][adjective][verbs][preposition][posession]}
 KB = {}
 KB['Steve'] = [['human','idiot','animal','mammal'],[],[],[],[]]
 KB['Gandalf'] = [['wizard'],[],[],[],[]]
@@ -106,6 +106,11 @@ KB['mammal'] = [['animal'],[],[],[],[]]
 KB['wizard'] = [[],[],[],[],[]]
 KB['idiot'] = [[],[],[],[],[]]
 KB['animal'] = [[],[],[],[],[]]
+
+# list for numbers. i.e. {['Josh':['videogames',2],['shoes',7]]}
+# NOUN,S has X OBJECT,P
+# NOUN,S has 1 OBJECT,S
+Count = {}
 
 
 
@@ -665,7 +670,7 @@ def guessAreQuestion(aThing):
     return ['Are', plural[0], word]
         
 
-    	
+            
 
 
 # ------------------------------------------------------------------------------
@@ -756,10 +761,49 @@ def addFactIs(person, superClass):
     # AI might just repeat X is a Y which is something we don't want
     # We could/should ask about plurals here instead
     # convert to plural
-    plural = convert([superClass], 'S')
+    #plural = convert([superClass], 'S')
+    
     return relatedAreQuestion(plural[0])
 
-
+# update the number Knowledge Base
+def addCount(noun,number,item):
+    added = False
+    for name,things in Count.items():
+        if name == noun:
+            for x in things:
+                if x[1] == item:
+                    #update the number if it already exist
+                    added = True
+                    temp = things
+                    temp.remove(x)
+                    temp.append([number,item])
+                    Count[noun] = temp
+            if not added:
+                #update if only noun is already there
+                temp = Count[noun]
+                temp.append([number,item])
+                Count[noun] = temp
+                added = True
+    #add it to the database if it isn't already there            
+    if not added:
+        Count[noun] = [[number,item]]
+    #ask followup question
+    if int(number) == 1:
+        for num in nouns:
+            if num[0] == item:
+                temp = num[1]+'?'
+                return['What are',temp]
+        #ask what is the plural of item
+        item = item+'?'
+        return ['What is the plural of',item]
+    else:
+        for num in nouns:
+            if num[1] == item:
+                temp = num[0]+'?'
+                return ['What is a',temp]
+        #ask what is the singular of item
+        item = item+'?'
+        return ['What is the singular of',item]
 
 
 
@@ -991,6 +1035,9 @@ def process_input4(AI_Input):
     # if input is of the form is X a/an Y
     elif AI_Input[0] == 'Is' and (AI_Input[2]== 'a' or AI_Input[2] == 'an'):
         response = checkIsQuestion(AI_Input[1],AI_Input[2], AI_Input[3])
+    # if input is of the form NOUN HAS X OBJECT
+    elif AI_Input[1] == 'has' and AI_Input[2].isdigit():
+        response = addCount(AI_Input[0], AI_Input[2], AI_Input[3])
     # print confused if input of length 4 is malformed
     else:
         response = ['I', 'am', 'confused']
@@ -1037,6 +1084,27 @@ def process_input3(AI_Input):
     print_list(response)
     response[len(response)-1] = remove_punc(response[len(response)-1])
 
+def process_input6(AI_Input):
+    global prev_output
+    response = ['What is a', AI_Input[5], '?']
+    if AI_Input[0] == 'what' or AI_Input[0] == 'What':
+        if AI_Input[1] == 'is' and AI_Input[2] == 'the' and AI_Input[3] == 'plural' and AI_Input[4] == 'of':
+            #look in the list of nouns to find the plural of the word
+            #if no match, then it will ask the user 'What is a object?
+            for x in nouns:
+                if x[0] == AI_Input[5]:
+                    response = ['The plural of ', AI_Input[5], " is ", x[1]]
+    elif AI_Input[0] == 'the' or AI_Input[0] == 'The':
+        if AI_Input[1] == 'plural' and AI_Input[2] == 'of' and AI_Input[4] == 'is':
+            update_plurals(AI_Input[3],AI_Input[5])
+            response = ['What are', AI_Input[5], '?']
+    if AI_Input[0] == 'the' or AI_Input[0] == 'The':
+        if AI_Input[1] == 'singular' and AI_Input[2] == 'of' and AI_Input[4] == 'is':
+            update_plurals(AI_Input[5],AI_Input[3])
+            response = ['What are', AI_Input[5], '?']
+    prev_output = response
+    print_list(response)
+
 # A function that calls the appropriate functions according to the input and
 # determines what it is being told/asked
 def process_input(line):
@@ -1072,6 +1140,8 @@ def process_input(line):
         process_input4(input1)
         
     # if length of list is 3
+    elif length == 6:
+        process_input6(input1)
     elif length == 3:
         # if input is "I am unsure"
         if input1[0] == 'I' and input1[1] == 'am' and input1[2] == 'unsure':
@@ -1119,8 +1189,8 @@ def main():
         output += 1 # increment output counter
 
         # test to make sure prev_output is updating correctly
-        print("printing previous to make sure its updating")
-        print_list(prev_output)
+        #print("printing previous to make sure its updating")
+        #print_list(prev_output)
         
         # terminate program when at least 20 outputs are given
         if output > 20:
