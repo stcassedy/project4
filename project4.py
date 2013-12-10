@@ -513,8 +513,8 @@ def checkWhatQuestion(aThing):
             response = [aThing, 'is', 'a', xIs]
         else:
             # converts noun to plural
-            plural = convert([xIs],'S')
-            response = [aThing, 'are', plural[0]]
+            plural = convert([aThing,xIs],'S')
+            response = [plural[0], 'are', plural[1]]
     return response
 
 # A function that answers questions of the form "Are X Y"
@@ -749,7 +749,11 @@ def addFactAre(subClass, superClass):
     # >>>NOTE: need to catch adjectives somehow!
     singList = convert([subClass, superClass], 'P')
     # inserted is true if fact was added
-    plural = convert([superClass], 'S')
+    inserted = update_KB_is(singList[0],singList[1])
+    update_categories(singList[0])
+    #plural = convert([superClass], 'S')
+    plural = convert([singList[1]], 'S')
+    print(KB)
     return relatedAreQuestion(plural[0])
 
 
@@ -767,7 +771,7 @@ def addFactIs(person, superClass):
     # We could/should ask about plurals here instead
     # convert to plural
     plural = convert([superClass], 'S')
-    
+    print(KB)
     return relatedAreQuestion(plural[0])
 
 # update the number Knowledge Base
