@@ -482,12 +482,8 @@ def checkWhatQuestion(aThing):
     # variable to store our response to the what is X question
     response = []
     # if this person or thing is known
-    if aThing in individual:
+    if (aThing in individual) or (aThing in category):
         properties = KB[aThing]
-    # if this category is known
-    elif aThing in category:
-        properties = KB[aThing]
-        
     # if AI does not know what X is
     if properties == None:
         # we can have a 50% chance to say not sure or ask related question
@@ -495,27 +491,69 @@ def checkWhatQuestion(aThing):
         response = ['I', 'am', 'unsure']
     else:
         global fact_value
+        global fact_key
         # the first list in properties is what X is
         values = properties[0]
         # give one of the things that X is that hasn't be given yet
-        xIs = None
-        # Check if we're giving facts about X, then just give the next fact
+        xIs = list()
+        # Check if we're giving facts about X, then update counter when
+        # giving out the next fact
         keys = sorted(KB.keys())
         if aThing == keys[fact_key]:
-            xIs = values[fact_value]
             # updates global counter
-            fact_value += 1
-        # else give the last fact about X
-        else:
-            xIs = values[len(values)-1]
-        # updates response base on if X is an individual or category
+            fact_key += 1
+            fact_value = 0
+        # If answer "What is X" (I.E What is Fido)
         if aThing in individual:
-            response = [aThing, 'is', 'a', xIs]
+            # sets up the response to other AI
+            response = [aThing, 'is']
+            # if X is only 1 thing append it
+            if len(values) == 1:
+                xIs.append('a')
+                xIs.append(values[0]+'.')
+            # find all things X is
+            else:
+                # add ',' to all things or if at end put 'and'
+                for index in range(0, len(values)-1):
+                    # if this is the 2nd last word
+                    if index == len(values)-2:
+                        second_last = values[index]
+                        last = values[index+1]
+                        # appends "a X and a Y"
+                        xIs.append('a')
+                        xIs.append(second_last)
+                        xIs.append('and')
+                        xIs.append('a')
+                        xIs.append(last+'.')
+                    else:
+                        it_is = values[index]+','
+                        # appends "a something" (need to check when to use a/an)
+                        xIs.append('a') 
+                        xIs.append(it_is)
+        # If answering "What are Xs" (I.E what are dogs or What is a dog)
         else:
-            # converts noun to plural
-            plural = convert([aThing,xIs],'S')
-            response = [plural[0], 'are', plural[1]]
-    return response
+            # sets up response to other AI
+            plur = convert([aThing],'S')
+            response = [plur[0], 'are']
+            # check if there is only thing X is
+            if len(values) == 1:
+                plural = convert([values[0]], 'S')
+                xIs.append(plural[0]+'.')
+            # look for all things X are
+            else:
+                # change all words to plural and add them in
+                for index in range(0, len(values)-1):
+                    # if at 2nd to last word
+                    if index == len(values)-2:
+                        # change to plural and add it at the end
+                        plural = convert([values[index], values[index+1]], 'S')
+                        xIs.append(plural[0])
+                        xIs.append('and')
+                        xIs.append(plural[1]+'.')
+                    else:
+                        plural = convert([values[index]], 'S')
+                        xIs.append(plural[0]+',')
+    return response+xIs
 
 # A function that answers questions of the form "Are X Y"
 def checkAreQuestion(aThing, inCategory):
@@ -753,7 +791,6 @@ def addFactAre(subClass, superClass):
     update_categories(singList[0])
     #plural = convert([superClass], 'S')
     plural = convert([singList[1]], 'S')
-    print(KB)
     return relatedAreQuestion(plural[0])
 
 
@@ -771,7 +808,6 @@ def addFactIs(person, superClass):
     # We could/should ask about plurals here instead
     # convert to plural
     plural = convert([superClass], 'S')
-    print(KB)
     return relatedAreQuestion(plural[0])
 
 # update the number Knowledge Base
@@ -1090,8 +1126,9 @@ def process_input3(AI_Input):
         response = addFactAre(AI_Input[0], AI_Input[2])
     # if input is "I am leaving."
     elif AI_Input[0] == 'I' and AI_Input[1] == 'am' and AI_Input[2] == 'leaving':
-        print("I am leaving")
-        sys.exit() # exit program (Need a better way)
+        global output
+        output = 20 # changes output to 20 so it will quit naturally
+        return # exit function
     # print confused for outer if statement
     else:
         response = ['I', 'am', 'confused.']
@@ -1100,6 +1137,7 @@ def process_input3(AI_Input):
     response[len(response)-1] = remove_punc(response[len(response)-1])
     prev_output = response
 
+# process input for what is plural and what is singular
 def process_input6(AI_Input):
     global prev_output
     response = ['What is a', AI_Input[5], '?']
@@ -1155,9 +1193,10 @@ def process_input(line):
         # process inputs of length 4
         process_input4(input1)
         
-    # if length of list is 3
+    # if length of list is 6
     elif length == 6:
         process_input6(input1)
+    # if length of list is 3
     elif length == 3:
         # if input is "I am unsure"
         if input1[0] == 'I' and input1[1] == 'am' and input1[2] == 'unsure':
@@ -1203,11 +1242,6 @@ def main():
     for line in sys.stdin:
         process_input(line)
         output += 1 # increment output counter
-
-        # test to make sure prev_output is updating correctly
-        #print("printing previous to make sure its updating")
-        #print_list(prev_output)
-        
         # terminate program when at least 20 outputs are given
         if output > 20:
             print("I am leaving.")
