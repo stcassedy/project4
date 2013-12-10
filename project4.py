@@ -761,7 +761,7 @@ def addFactIs(person, superClass):
     # AI might just repeat X is a Y which is something we don't want
     # We could/should ask about plurals here instead
     # convert to plural
-    #plural = convert([superClass], 'S')
+    plural = convert([superClass], 'S')
     
     return relatedAreQuestion(plural[0])
 
@@ -978,8 +978,11 @@ def process_input2(line):
     categories = []
     query = [] # question that will be asked about a fact recieved
     new_fact = [] # remembers a new fact that has been added
+    # check for inputs smaller than 3
+    if len(line) < 3:
+        query = ['I', 'am', 'confused.']
     # check if line contains is
-    if line[1] == 'is' and line[2] == 'a' and ('and' in line):
+    elif line[1] == 'is' and line[2] == 'a' and ('and' in line):
         parseIs(line, people, categories)
         # after everything has been added, add all these facts to DB
         # directly, so it doesnt give a response
@@ -1008,11 +1011,12 @@ def process_input2(line):
 
     # all other input are considered malform input
     else:
-        query = ['i', 'am', 'confused']
+        query = ['I', 'am', 'confused.']
     # update prev_output and print query
     global prev_output
-    prev_output = query
     print_list(query)
+    query[len(query)-1] = remove_punc(query[len(query)-1])
+    prev_output = query
                 
 
 # A function that handles inputs of length 4
@@ -1027,7 +1031,7 @@ def process_input4(AI_Input):
         # Print statement here because it skips the other one at
         # end in case of malform input
         else:
-            response = ['I', 'am', 'confused']
+            response = ['I', 'am', 'confused.']
     # if input is of the form X is a/an Y
     elif AI_Input[1] == 'is' and (AI_Input[2] == 'a' or AI_Input[2] == 'an'):
         # helper function that adds the fact to KB if not known
@@ -1040,9 +1044,11 @@ def process_input4(AI_Input):
         response = addCount(AI_Input[0], AI_Input[2], AI_Input[3])
     # print confused if input of length 4 is malformed
     else:
-        response = ['I', 'am', 'confused']
-    prev_output = response
+        response = ['I', 'am', 'confused.']
+    # print response to other AI
     print_list(response)
+    response[len(response)-1] = remove_punc(response[len(response)-1])
+    prev_output = response
 
 # A function that handles inputs of length 3
 def process_input3(AI_Input):
@@ -1060,7 +1066,7 @@ def process_input3(AI_Input):
             response = checkWhatQuestion(singular[0])
         # form is malformed
         else:
-            response = ['I', 'am', 'confused']
+            response = ['I', 'am', 'confused.']
     # if input is of the form Who are Xs
     elif AI_Input[0] == 'Who' and AI_Input[1] == 'are':
         # convert X to a singular
@@ -1079,10 +1085,11 @@ def process_input3(AI_Input):
         sys.exit() # exit program (Need a better way)
     # print confused for outer if statement
     else:
-        response = ['I', 'am', 'confused']
-    prev_output = response
+        response = ['I', 'am', 'confused.']
+    # print response to other AI
     print_list(response)
     response[len(response)-1] = remove_punc(response[len(response)-1])
+    prev_output = response
 
 def process_input6(AI_Input):
     global prev_output
