@@ -1,11 +1,7 @@
 project4
 ========
-Need to have plurals.
-Need to switch to singular when checking with database.
-Need to switch to plural when taking information out of database in certain cases.
-functions need to be able to process "what the plural of X" inputs.
+Plurals implemented but a bit buggy.
 
-Parsing needs to remove any form of punctuation before entering something into database.
-When giving outputs, puncations are required in correct places.
+There are extra spaces when giving outputs for multiple answers for "Who are"
 
-AddFacts() is still incomplete.  It doesn't update the database correctly (since we added a new KB that could keep track of all these properties)
+There is an extra space at the end when asking relatedWhatQuestion after recieving singular/plural from other AI
