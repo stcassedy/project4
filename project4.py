@@ -107,7 +107,8 @@ KB['wizard'] = [[],[],[],[],[]]
 KB['idiot'] = [[],[],[],[],[]]
 KB['animal'] = [[],[],[],[],[]]
 
-# list for numbers. i.e. {['Josh':['videogames',2],['shoes',7]]}
+# list for numbers. i.e. {'Josh': [['2', 'videogames'], ['1', 'girlfriend'], ['10', 'fingers']],
+#                         'Emily': [['20', 'ribs']]}
 # NOUN,S has X OBJECT,P
 # NOUN,S has 1 OBJECT,S
 Count = {}
@@ -470,7 +471,25 @@ def checkWhoQuestion(is_are,a_an,word):
             return ['I', 'am', 'unsure']
        
  
-   
+########################################################
+#A function that finds out "Who has X objects"
+def checkWhoHas(number,item):
+    result = []
+    output = []
+    for name,things in Count.items():
+        for x in things:
+            if x[0] == number and x[1] == item:
+                result.append(name)
+    if len(result) >= 1:
+        for noun in result[:-1]:
+            output.append(noun)
+            output.append('and')
+        output.append(result[-1])
+        output.append('has '+number+ ' '+item)
+        return output
+    else:
+        return relatedAreQuestion(item)
+    
 ########################################################
 
 # A function that answers questions of the form "what is/are X"
@@ -1109,6 +1128,8 @@ def process_input4(AI_Input):
     elif AI_Input[0] == 'Is' and (AI_Input[2]== 'a' or AI_Input[2] == 'an'):
         response = checkIsQuestion(AI_Input[1],AI_Input[2], AI_Input[3])
     # if input is of the form NOUN HAS X OBJECT
+    elif AI_Input[0] == 'Who' and AI_Input[1] == 'has' and AI_Input[2].isdigit():
+        response = checkWhoHas(AI_Input[2],AI_Input[3])
     elif AI_Input[1] == 'has' and AI_Input[2].isdigit():
         response = addCount(AI_Input[0], AI_Input[2], AI_Input[3])
     # print confused if input of length 4 is malformed
