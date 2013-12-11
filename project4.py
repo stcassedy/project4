@@ -809,8 +809,15 @@ def addFactIs(person, superClass):
     # AI might just repeat X is a Y which is something we don't want
     # We could/should ask about plurals here instead
     # convert to plural
-    plural = convert([superClass], 'S')
-    return relatedAreQuestion(plural[0])
+    #plural = convert([superClass], 'S')
+    #return relatedAreQuestion(plural[0])
+    for x in nouns:
+        if x[0] == superClass:
+            return relatedAreQuestion(x[1])
+    temp = superClass+'?'
+    return ['What is the plural of',temp]
+
+
 
 # update the number Knowledge Base
 def addCount(noun,number,item):
@@ -1168,11 +1175,11 @@ def process_input6(AI_Input):
     elif AI_Input[0] == 'the' or AI_Input[0] == 'The':
         if AI_Input[1] == 'plural' and AI_Input[2] == 'of' and AI_Input[4] == 'is':
             update_plurals(AI_Input[3],AI_Input[5])
-            response = ['What are', AI_Input[5], '?']
+            response = ['What are', AI_Input[5]+'?']
     if AI_Input[0] == 'the' or AI_Input[0] == 'The':
         if AI_Input[1] == 'singular' and AI_Input[2] == 'of' and AI_Input[4] == 'is':
             update_plurals(AI_Input[5],AI_Input[3])
-            response = ['What are', AI_Input[5], '?']
+            response = ['What are', AI_Input[3]+'?']
     prev_output = response
     print_list(response)
 
