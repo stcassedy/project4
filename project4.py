@@ -108,7 +108,8 @@ KB['wizard'] = [[],[],[],[],[]]
 KB['idiot'] = [[],[],[],[],[]]
 KB['animal'] = [[],[],[],[],[]]
 
-# list for numbers. i.e. {'Josh': [['2', 'videogames'], ['1', 'girlfriend'], ['10', 'fingers']],
+# list for numbers. i.e. {'Josh': [['2', 'videogames'], ['1', 'girlfriend'],
+#                                                       ['10', 'fingers']],
 #                         'Emily': [['20', 'ribs']]}
 # NOUN,S has X OBJECT,P
 # NOUN,S has 1 OBJECT,S
@@ -140,7 +141,6 @@ def update_plurals(single,plural):
     '''
     appends new item to the plural list
     '''
-    #if nouns.count([single,plural]) == 0:
     nouns.append([single,plural])
 
 def update_adjectives(adj):
@@ -300,13 +300,13 @@ def update_KB_poss(thing,poss):
 # ------------------------------------------------------------------------------
 # General all purpose helper functions that help with all functions.
 # ------------------------------------------------------------------------------
-'''
-# a helper function that converts a list of nouns to its counter-part
-# inType is if the nounList is plural 'P' or singular 'S'
-# if it doesn't know the plural it will add an S
-# if it doesn't know the singular it will remove the last letter
-'''
 def convert(nounList, inType):
+    '''
+    a helper function that converts a list of nouns to its counter-part.
+    nType is if the nounList is plural 'P' or singular 'S'.
+    if it doesn't know the plural it will add an S.
+    if it doesn't know the singular it will remove the last letter.
+    '''
     if inType == 'S':
         index = 1
         check = 0
@@ -335,16 +335,20 @@ def convert(nounList, inType):
     # return the list
     return c_list
 
-''' A function that prints a list to std.out'''
 def print_list(inList):
+    '''
+    A function that prints a list to std.out
+    '''
     for index in range(0, len(inList)):
         if index == len(inList)-1:
             print(inList[index])
         else:
             print(inList[index], end =" ")
 
-''' A function that removes punctuation marks'''
 def remove_punc(word):
+    '''
+    A function that removes punctuation marks
+    '''
     newWord = word
     for index in range(0,len(word)):
         letter = word[index]
@@ -357,7 +361,7 @@ def remove_punc(word):
 
 
 
-'''
+
 # ------------------------------------------------------------------------------
 # These functions deal with inference and answering questions.
 # If an answer is not known, then the AI can ask a question related to the
@@ -365,14 +369,11 @@ def remove_punc(word):
 # if it does not know, it can look through the database and pick a random
 # person or thing) or it can respond with "I am not sure"
 # ------------------------------------------------------------------------------
-'''
-
 ###########################################################
-
-
-'''reply for isQuestion '''
 def checkIsQuestion(name, a_an, aThing):
-    
+    '''
+    reply for isQuestion
+    '''
     check=False
     values=[]
     if name in individual:
@@ -386,10 +387,13 @@ def checkIsQuestion(name, a_an, aThing):
                 return [name,'is',a_an ,aThing2]
 # if kb doesn't have the fact, ask a related query
     if (check==False):  
-        # 50/50 chance to give related query or respond I am unsure
-        rand= random.randint(0,1)
+        # randomly select whether to respond what are X or guess what is X
+        rand= random.randint(0,2)
         if(rand==0):
-            return relatedToIsQuestion(name,a_an,aThing)
+            return relatedWhatQuestion(name)
+        elif rand == 1:
+            plural = convert([aThing],'S')
+            return relatedAreQuestion(plural[0])
         else:
             return ['I', 'am', 'unsure']
         
@@ -398,9 +402,10 @@ def checkIsQuestion(name, a_an, aThing):
 
 
 ########################################################
-'''reply for who question'''
-
 def checkWhoQuestion(is_are,a_an,word):
+    '''
+    Reply for who question
+    '''
     global multi_answer
     count=0
     ct=0
@@ -419,7 +424,8 @@ def checkWhoQuestion(is_are,a_an,word):
 
     if(count !=0):
         if(count ==1):
-            # if there are several answers for who is a Y, we just pick the first one
+            # if there are several answers for who is a Y,
+            # we just pick the first one
             if(is_are=='are'):
                 output= [correct_answer.pop(0)]
                 word2 = word+'.'
@@ -429,7 +435,8 @@ def checkWhoQuestion(is_are,a_an,word):
                 word2 = word+'.'
                 return [output[0],'is',a_an,word2]
         else:
-            # if there are several answers for who is a Y, we just pick the first one
+            # if there are several answers for who is a Y,
+            # we just pick the first one
             if(is_are=='is'):
                 output= [correct_answer.pop(0)]
                 word2 = word+'.'
@@ -462,17 +469,16 @@ def checkWhoQuestion(is_are,a_an,word):
        # 50/50 chance to ask question or reply i am unsure
        rand= random.randint(0,1)
        if(rand==0):
-            return relatedToWhoQuestion(a_an,word)
+           plural = convert([word], 'S')
+           return relatedAreQuestion(plural[0])
        else:
             return ['I', 'am', 'unsure']
-       
- 
-       
- 
-########################################################
         
-'''A function that finds out "Who has X objects"'''
+########################################################
 def checkWhoHas(number,item):
+    '''
+    A function that finds out "Who has X objects"
+    '''
     result = []
     output = []
     for name,things in Count.items():
@@ -489,8 +495,10 @@ def checkWhoHas(number,item):
     else:
         return relatedAreQuestion(item)
 
-'''A function that finds out 'How many OBJECT does NOUN have?'''
 def checkHowMany(item,noun):
+    '''
+    A function that finds out 'How many OBJECT does NOUN have?'
+    '''
     for name,things in Count.items():
         if name == noun:
             for x in things:
@@ -498,8 +506,10 @@ def checkHowMany(item,noun):
                     return[noun,'has', x[0], item]
     return relatedAreQuestion(item)
 
-'''A function that finds out 'Who has the most OBJECT?'''
 def checkHasMost(item):
+    '''
+    A function that finds out 'Who has the most OBJECT?'
+    '''
     highest = -1
     result = ''
     for name,things in Count.items():
@@ -515,12 +525,11 @@ def checkHasMost(item):
                     
     
 ########################################################
-'''
-# A function that answers questions of the form "what is/are X"
-# This function only returns one thing (rather than multiple)
-# Need to implement this when time permits
-'''
-def checkWhatQuestion(aThing):
+def checkWhatQuestion(aThing,a_an):
+    '''
+    A function that answers questions of the form "what is/are X"
+    This function will return multiple answers if there is more than one
+    '''
     # variable to hold the properties of aThing
     properties = None
     # variable to store our response to the what is X question
@@ -536,8 +545,17 @@ def checkWhatQuestion(aThing):
     # if AI does not know what X is
     if properties == None or values == []:
         # we can have a 50% chance to say not sure or ask related question
-        # if time permits
-        response = ['I', 'am', 'unsure.']
+        rand = random.randint(0,1)
+        # guess is X a Y?
+        if rand == 0:
+            # if a Thing is a person look for guesses in categories
+            if a_an == None:
+                response = guessIs(aThing)
+            # if a Thing is a category look for guesses in other categories
+            else:
+                response = guessAreQuestion(aThing)
+        else:
+            response = ['I', 'am', 'unsure.']
     else:
         global fact_value
         global fact_key
@@ -566,15 +584,15 @@ def checkWhatQuestion(aThing):
                         second_last = values[index]
                         last = values[index+1]
                         # appends "a X and a Y"
-                        xIs.append('a')
+                        xIs.append('an')
                         xIs.append(second_last)
                         xIs.append('and')
-                        xIs.append('a')
+                        xIs.append('an')
                         xIs.append(last+'.')
                     else:
                         it_is = values[index]+','
-                        # appends "a something" (need to check when to use a/an)
-                        xIs.append('a') 
+                        # appends "a something"
+                        xIs.append('an') 
                         xIs.append(it_is)
         # If answering "What are Xs" (I.E what are dogs or What is a dog)
         else:
@@ -601,8 +619,12 @@ def checkWhatQuestion(aThing):
                         xIs.append(plural[0]+',')
     return response+xIs
 
-''' A function that answers questions of the form "Are X Y" '''
 def checkAreQuestion(aThing, inCategory):
+    '''
+    A function that answers questions of the form "Are X Y"
+    If the answer is not known, there is a 50/50 chance of responding
+    with I am unsure or a related query
+    '''
     # stores the response in a variable
     response = []
     # switches X and Y from plural to singular
@@ -623,7 +645,7 @@ def checkAreQuestion(aThing, inCategory):
         if singular[1] in values:
             response = [aThing, 'are', inCategory]
         else:
-            # 50% chance to say unsure or give related query/fact
+            # respond with I am unsure if not known
             response = ['I', 'am', 'unsure.']
     return response
 
@@ -633,17 +655,12 @@ def checkAreQuestion(aThing, inCategory):
 # ------------------------------------------------------------------------------
 # These functions deal with asking questions
 # ------------------------------------------------------------------------------
-'''
 ############ related is-question ###################
-# A function that asks a related question to is X a/an Y
-# The AI will ask for clarification if it doesnt know.
-# If it doesnt know who X is, it will ask what is X
-# if it doesnt know what Y is, it will ask who is a Y
-
-# note if recieving fact is should ask a follow up question
-# like who is a Y (which it does not)
-'''
 def relatedToIsQuestion(x_value,a_an, y_value):
+    '''
+    Asks a related question Who is a/an X or asks
+    What is a/an Y
+    '''
     rand= random.randint(0,1)
     if(rand==0):
         word = x_value+'?'
@@ -662,14 +679,14 @@ def relatedToIsQuestion(x_value,a_an, y_value):
             #askedWhoQ.append(y_value)
             return ['Who','is',a_an, word]
             
-'''            
+            
 ############related who-questions##########
-# A function that asks a related question to "who is a/an Y"
-# The AI will take a guess, so it will ask "is X a/an Y"
-# where X is a randomly chosen specific person or thing
-'''
-
-def relatedToWhoQuestion(a_an,a_object): 
+def relatedToWhoQuestion(a_an,a_object):
+    '''
+    A function that asks a related question to "who is a/an Y"
+    The AI will take a guess, so it will ask "is X a/an Y"
+    where X is a randomly chosen specific person or thing
+    '''
     rand= random.randint(0,len(individual)-1)
    
     #pick a random number from individual
@@ -694,60 +711,25 @@ def relatedToWhoQuestion(a_an,a_object):
     return ['Is', rand_name, 'a',word]
     askedIsQ.append(currQuest)
 
-'''
-# A function that asks a related question to "what is X"
-# The AI will take a guess, so it will ask "is X a Y?"
-# where Y is random chosen higher category than X
-'''
+
 def relatedWhatQuestion(aThing):
-    rand= random.randint(0,len(category)-1)
-   
-    #pick a random number from category
-    rand_name= category[rand]
-
-  
-# check whether word is already asked or not
-    currQuest= (rand_name,aThing)
-    flag= currQuest in askedIsQ
-
-# if yes, get a another random word
-    while(flag==True):
-       rand= random.randint(0,len(category)-1)
-        #pick a random number from category
-       rand_name= category[rand]
-        # check whether word is already asked or not
-       currQuest= (rand_name, aThing)
-       flag= currQuest in askedIsQ
-
-    word = aThing+'?'
-    return ['Is', rand_name, 'a/an',word]
-    askedIsQ.append(currQuest)
-'''    
-# A function that asks a related question to "are X Ys"
-# or if it recieves a fact of the form X are Ys
-
-# Note when asking about a related fact, check if X is an individual or category
-# if X is an individual it should ask is X a/an Ys
-# if X is a category it should ask are X Ys
-# but this asks a question we know the answer to... just ask what is Y?
+    '''
+    A function that asks What is aThing
+    '''
+    return ['What','is',aThing+'?']
+    
 def relatedAreQuestion(aThing2):
+    '''
+    A function that asks What are X where X is a category
+    '''
     word = aThing2+'?'
-    #askedWhatQ.append(aThing)
     return ['What', 'are', word]
-    #rand= random.randint(0,1)
-    #if(rand==0):
-    #    word = aThing+'?'
-    #    return ['What', 'are', word]
-    #    askedWhatQ.append(aThing)
-    #else:
-    #    word = aThing2+'?'
-    #    return ['What','are',word]
-    #    askedWhatQ.append(aThing2)
 
-# A function that takes a guess as to what aThing could be
-# this returns a related query
-'''
 def guessAreQuestion(aThing):
+    '''
+    A function that takes a guess as to what aThing could be
+    this returns a related query
+    '''
     # get the keys
     keys = list(KB.keys())
     # pick a key that is a category
@@ -760,23 +742,28 @@ def guessAreQuestion(aThing):
     word = aThing+'?'
     return ['Are', plural[0], word]
         
-
+def guessIs(person):
+    '''
+    A function that takes a guess at what a person could be
+    '''
+    # take a random name
+    rand = random.randint(0, len(category)-1)
+    category1 = category[rand]
+    return ['Is',person,'an',category1+'?']
             
 
 
 # ------------------------------------------------------------------------------
 # These functions deal with storing knowledge into the database
 # Once a fact is stored, the AI should respond with a related question.
-# I.E "Dogs are cute" => "what are dogs."  Note that the AI would only need to
-# ask about dogs in this case since this fact is of the form X are Y.  It would
-# be hard to answer what is an animal or what is cute.
+# I.E "Dogs are cute" => "what are dogs."
 # If a fact is already known, the AI will either give a new fact or query with
 # an equal chance of either one happening.
 # ------------------------------------------------------------------------------
-'''
-# gives a fact that the AI knows
-'''
 def giveFact():
+    '''
+    gives a fact that the AI knows
+    '''
     global fact_value
     global fact_key
     global prev_output
@@ -806,10 +793,9 @@ def giveFact():
     # determine if the key is a person or category
     if key in individual:
         # If its a person
-        # >>>> NEED TO CHECK WHETHER TO USE A/AN <<<<<<<
-        print(key + ' is' + ' a ' + values[fact_value])
+        print(key + ' is' + ' an ' + values[fact_value])
         # update global counter
-        prev_output = [key, 'is', 'a', values[fact_value]]
+        prev_output = [key, 'is', 'an', values[fact_value]]
     else:
         # swap from singular to plural
         plurals = convert([key, values[fact_value]], 'S')
@@ -827,40 +813,32 @@ def giveFact():
         # if at the end of DB
         if fact_key > len(keys)-1:
             fact_key = 0 # start from very beginning
-'''
-# This function stores a fact of the form Xs are Ys
-# This function is needed because X and Y are plural
-# subClass is the lower class (I.E dogs)
-# superClass is the general category (I.E animal)
-'''
+
 def addFactAre(subClass, superClass):
+    '''
+    This function stores a fact of the form Xs are Ys
+    This function is needed because X and Y are plural
+    subClass is the lower class (I.E dogs)
+    superClass is the general category (I.E animal)
+    '''
     # change subClass and superClass into singular nouns
-    # >>>NOTE: need to catch adjectives somehow!
     singList = convert([subClass, superClass], 'P')
     # inserted is true if fact was added
     inserted = update_KB_is(singList[0],singList[1])
     update_categories(singList[0])
-    #plural = convert([superClass], 'S')
     plural = convert([singList[1]], 'S')
     return relatedAreQuestion(plural[0])
 
-'''
-# This function stores fact of the form X is a Y
-# This function is needed because Y is singular
-# subClass is the lower class (I.E fido)
-# superClass is the more general category (I.E Dog in this case)
-'''
 def addFactIs(person, superClass):
+    '''
+    This function stores fact of the form X is a Y
+    This function is needed because Y is singular
+    subClass is the lower class (I.E fido)
+    superClass is the more general category (I.E Dog in this case)
+    '''
     # call helper function to add fact into database, no change needed
     inserted = update_KB_is(person, superClass)
     update_names(person)
-    # whether or not a new fact was added, it should ask what are Ys
-    # since asking about X can only go in one direction and the other
-    # AI might just repeat X is a Y which is something we don't want
-    # We could/should ask about plurals here instead
-    # convert to plural
-    #plural = convert([superClass], 'S')
-    #return relatedAreQuestion(plural[0])
     for x in nouns:
         if x[0] == superClass:
             return relatedAreQuestion(x[1])
@@ -869,8 +847,10 @@ def addFactIs(person, superClass):
 
 
 
-''' update the number Knowledge Base'''
 def addCount(noun,number,item):
+    '''
+    update the number Knowledge Base
+    '''
     added = False
     for name,things in Count.items():
         if name == noun:
@@ -915,14 +895,13 @@ def addCount(noun,number,item):
 # These functions deal with responses that say "I am confused" or "I am unsure"
 # If another AI remains confused after a few times, the AI should give it
 # a new fact.
-# Note: Might need to fix if previous outputs subjects have more than 1 person
 # ------------------------------------------------------------------------------
-
-'''
-# this function attempts to clarify by outputing related another fact
-# when the other AI is confused after hearing a fact. it gives up after 3 tries
-'''
 def clarify_confused():
+    '''
+    this function attempts to clarify by outputing related another fact
+    when the other AI is confused after hearing a fact.
+    It gives up after 3 tries
+    '''
     global clarify_count
     global prev_output
     # variables to hold all the information
@@ -930,7 +909,6 @@ def clarify_confused():
     categories = []
     # gives a related fact depending on the form of the fact give
     # if fact is of the form X is a Y
-    # Note answering what question doesn't give more than one answer
     # so it doesn't have to handle forms that have more than 1 Y at the moment
     if prev_output[1] == 'is' and (prev_output[2]=='a' or prev_output[2]=='an'):
         # if the fact given had more than 1 object, give one object
@@ -959,19 +937,15 @@ def clarify_confused():
         # this form is literally X are Ys
         else:
             giveFact()
-            # ask a related are question
-            #answer = relatedAreQuestion(prev_output[0],prev_output[2])
-            # need this so prev_output doesnt get over written too early
-            #prev_output = answer
-            #print_list(prev_output)
     clarify_count += 1 # increment try counter
 
 
-'''
-# this function attempts to clarify by outputing another related query
-# when the other AI is confused after hearing a fact. it gives up after 3 tries
-'''
 def clarify_unsure():
+    '''
+    this function attempts to clarify by outputing another related query
+    when the other AI is confused after hearing a fact.
+    It gives up after 3 tries
+    '''
     # gives us permission to change global variable
     global clarify_count
     global prev_output
@@ -979,7 +953,7 @@ def clarify_unsure():
     # If other AI is unsure who is a/an X, our AI should answer the question
     if prev_output[0] == 'Who' and prev_output[1] == 'is':
         # answer the question
-        answer = checkWhoQuestion(prev_output[1], prev_output[2],prev_output[3])
+        answer = checkWhoQuestion(prev_output[1],prev_output[2],prev_output[3])
         # if no answer was found
         if answer[0] == 'I' and answer[1] == 'am' and answer[2] == 'unsure':
             # ask a related question
@@ -987,7 +961,8 @@ def clarify_unsure():
         # print response
         print_list(answer)
         prev_output = answer
-        prev_output[len(prev_output)-1] = remove_punc(prev_output[len(prev_output)-1])
+        leng = len(prev_output)-1
+        prev_output[leng] = remove_punc(prev_output[leng])
         
             
     # If other AI is unsure what is/are X, our AI will answer the question
@@ -1000,10 +975,11 @@ def clarify_unsure():
         # print response
         print_list(answer)
         prev_output = answer
-        prev_output[len(prev_output)-1] = remove_punc(prev_output[len(prev_output)-1])
-            
+        leng = len(prev_output)-1
+        prev_output[leng] = remove_punc(prev_output[leng])
+                    
     # If other AI is unsure if X is a Y
-    elif prev_output[0]=='Is': #and (prev_output[2]=='a' or prev_output[2]=='an'):
+    elif prev_output[0]=='Is' and (prev_output[2]=='a' or prev_output[2]=='an'):
         # answer the question
         answer = checkIsQuestion(prev_output[1], prev_output[2],prev_output[3])
         # if no answer was found
@@ -1013,7 +989,8 @@ def clarify_unsure():
         # print response
         print_list(answer)
         prev_output = answer
-        prev_output[len(prev_output)-1] = remove_punc(prev_output[len(prev_output)-1])
+        leng = len(prev_output)-1
+        prev_output[leng] = remove_punc(prev_output[leng])
             
     # If other AI is unsure if X are Y's
     elif prev_output[0] == 'Are':
@@ -1026,7 +1003,8 @@ def clarify_unsure():
         # print response
         print_list(answer)
         prev_output = answer
-        prev_output[len(prev_output)-1] = remove_punc(prev_output[len(prev_output)-1])
+        leng = len(prev_output)-1
+        prev_output[leng] = remove_punc(prev_output[leng])
         
     # if you are here, then other AI is unsure of a fact
     else:
@@ -1036,18 +1014,18 @@ def clarify_unsure():
 
 
 
-'''
+
 # ------------------------------------------------------------------------------
 # Main function and helper functions that help parse the input
 # ------------------------------------------------------------------------------
-
-# a function that parses the the line and stores the nouns/people/things
-# into a list that is passed by a parameter.
-# people is a list of people or things with names
-# categories are the general categories of things (I.E. dog)
-# this is for inputs of the form X is a Y and Z (or Y, Z, and V (etc))
-'''
 def parseIs(line, people, categories):
+    '''
+    A function that parses the the line and stores the nouns/people/things
+    into a list that is passed by a parameter.
+    people is a list of people or things with names
+    categories are the general categories of things (I.E. dog)
+    this is for inputs of the form X is a Y and Z (or Y, Z, and V (etc))
+    '''
     # there should only be one subject
     people.append(line[0])
     # iterate through line list and get all categories
@@ -1065,14 +1043,15 @@ def parseIs(line, people, categories):
             # removed the comma if it contains it
             word = remove_punc(line[index])
             categories.append(word)
-'''
-# a function that parses the the line and stores the nouns/people/things
-# into a list that is passed by a parameter.
-# people is a list of people or things with names
-# categories are the general categories of things (I.E. dog)
-# this is for inputs of the form X is a Y and Z (or Y, Z, and V (etc))
-'''
+
 def parseAre(line, people, categories):
+    '''
+    A function that parses the the line and stores the nouns/people/things
+    into a list that is passed by a parameter.
+    people is a list of people or things with names
+    categories are the general categories of things (I.E. dog)
+    this is for inputs of the form X is a Y and Z (or Y, Z, and V (etc))
+    '''
     # stores all the people into the list of people
     for index in range(0,len(line)-1):
         # if this part of the line says 'and
@@ -1087,15 +1066,16 @@ def parseAre(line, people, categories):
     # stores the category into the list
     categories.append(line[len(line)-1])
     
-'''
-# A function that process the input depending on new restrictions
-# If the program reaches here then either malformed input was recieved
-# or input with more than one subject was recieved
-# breaks on trick inputs (I.E using is/a/and/are as names will cause confusion)
-# Example form:  Josh is a student and a TA
-# Example Form2: Josh and Emily are TAs
-'''
+
 def process_input2(line):
+    '''
+    A function that process the input depending on new restrictions
+    If the program reaches here then either malformed input was recieved
+    or input with more than one subject was recieved
+    breaks on trick inputs (I.E using is/a/and/are as names will cause confusion
+    Example form:  Josh is a student and a TA
+    Example Form2: Josh and Emily are TAs
+    '''
     people = []
     categories = []
     query = [] # question that will be asked about a fact recieved
@@ -1140,10 +1120,11 @@ def process_input2(line):
     query[len(query)-1] = remove_punc(query[len(query)-1])
     prev_output = query
                 
-'''
- A function that handles inputs of length 4
-'''
+
 def process_input4(AI_Input):
+    '''
+    A function that handles inputs of length 4
+    '''
     global prev_output
     response = []
     # if input is of the form who is a/an Y
@@ -1156,8 +1137,9 @@ def process_input4(AI_Input):
         else:
             response = ['I', 'am', 'confused.']
     # if input is of the form What is a/an X
-    elif AI_Input[0] == 'What' and AI_Input[1] == 'is' and (AI_Input[2] == 'a' or AI_Input[2] == 'an'):
-        response = checkWhatQuestion(AI_Input[3])
+    elif AI_Input[0] == 'What' and AI_Input[1] == 'is' \
+    and (AI_Input[2] == 'a' or AI_Input[2] == 'an'):
+        response = checkWhatQuestion(AI_Input[3],AI_Input[2])
     # if input is of the form X is a/an Y
     elif AI_Input[1] == 'is' and (AI_Input[2] == 'a' or AI_Input[2] == 'an'):
         # helper function that adds the fact to KB if not known
@@ -1166,7 +1148,7 @@ def process_input4(AI_Input):
     elif AI_Input[0] == 'Is' and (AI_Input[2]== 'a' or AI_Input[2] == 'an'):
         response = checkIsQuestion(AI_Input[1],AI_Input[2], AI_Input[3])
     # if input is of the form NOUN HAS X OBJECT
-    elif AI_Input[0] == 'Who' and AI_Input[1] == 'has' and AI_Input[2].isdigit():
+    elif AI_Input[0]=='Who' and AI_Input[1] == 'has' and AI_Input[2].isdigit():
         response = checkWhoHas(AI_Input[2],AI_Input[3])
     elif AI_Input[1] == 'has' and AI_Input[2].isdigit():
         response = addCount(AI_Input[0], AI_Input[2], AI_Input[3])
@@ -1178,8 +1160,10 @@ def process_input4(AI_Input):
     response[len(response)-1] = remove_punc(response[len(response)-1])
     prev_output = response
 
-''' A function that handles inputs of length 3'''
 def process_input3(AI_Input):
+    '''
+    A function that handles inputs of length 3
+    '''
     global prev_output
     global multi_answer
     response = []
@@ -1188,7 +1172,7 @@ def process_input3(AI_Input):
     if AI_Input[0] == 'What':
         # if form is what is X
         if AI_Input[1] == 'is':
-            response = checkWhatQuestion(AI_Input[2])
+            response = checkWhatQuestion(AI_Input[2],None)
         # if form is what are X
         elif AI_Input[1] == 'are':
             # switch from plural to singular
@@ -1202,8 +1186,7 @@ def process_input3(AI_Input):
         # convert X to a singular
         singular = convert([AI_Input[2]], 'P')
         # for the x,y,z and k are Things case
-        response = checkWhoQuestion(AI_Input[1],'',singular[0])
-     
+        response = checkWhoQuestion(AI_Input[1],'',singular[0])    
     # if input is of the form are X Ys
     elif AI_Input[0] == 'Are':
         response = checkAreQuestion(AI_Input[1], AI_Input[2])
@@ -1212,7 +1195,7 @@ def process_input3(AI_Input):
         # Add fact to KB if not known
         response = addFactAre(AI_Input[0], AI_Input[2])
     # if input is "I am leaving."
-    elif AI_Input[0] == 'I' and AI_Input[1] == 'am' and AI_Input[2] == 'leaving':
+    elif AI_Input[0]=='I' and AI_Input[1] == 'am' and AI_Input[2] == 'leaving':
         global output
         output = 20 # changes output to 20 so it will quit naturally
         return # exit function
@@ -1228,45 +1211,53 @@ def process_input3(AI_Input):
     response[len(response)-1] = remove_punc(response[len(response)-1])
     prev_output = response
 
-''' process input for what is plural and what is singular '''
 def process_input6(AI_Input):
+    '''
+    Process input for what is plural and what is singular
+    '''
     global prev_output
     response = ['What is a', AI_Input[5] + '?']
     if AI_Input[0] == 'what' or AI_Input[0] == 'What':
-        if AI_Input[1] == 'is' and AI_Input[2] == 'the' and AI_Input[3] == 'plural' and AI_Input[4] == 'of':
+        if AI_Input[1] == 'is' and AI_Input[2] == 'the' and \
+           AI_Input[3] == 'plural' and AI_Input[4] == 'of':
             #look in the list of nouns to find the plural of the word
             #if no match, then it will ask the user 'What is a object?
             for x in nouns:
                 if x[0] == AI_Input[5]:
                     response = ['The plural of ', AI_Input[5], " is ", x[1]]
     elif AI_Input[0] == 'the' or AI_Input[0] == 'The':
-        if AI_Input[1] == 'plural' and AI_Input[2] == 'of' and AI_Input[4] == 'is':
+        if AI_Input[1] == 'plural' and AI_Input[2] == 'of' and \
+           AI_Input[4] == 'is':
             update_plurals(AI_Input[3],AI_Input[5])
             response = ['What are', AI_Input[5]+'?']
     # if input is of the form 'How many OBJECT does NOUN have?
-    elif AI_Input[0] == 'How' and AI_Input[1] == 'many' and AI_Input[3] == 'does' and AI_Input[5] == 'have':
+    elif AI_Input[0] == 'How' and AI_Input[1] == 'many' and \
+         AI_Input[3] == 'does' and AI_Input[5] == 'have':
         response = checkHowMany(AI_Input[2],AI_Input[4])
     if AI_Input[0] == 'the' or AI_Input[0] == 'The':
-        if AI_Input[1] == 'singular' and AI_Input[2] == 'of' and AI_Input[4] == 'is':
+        if AI_Input[1] == 'singular' and AI_Input[2] == 'of' and \
+           AI_Input[4] == 'is':
             update_plurals(AI_Input[5],AI_Input[3])
             response = ['What are', AI_Input[3]+'?']
     prev_output = response
     print_list(response)
 
 
-''' process input for what is plural and what is singular '''
 def process_input5(AI_Input):
+    '''
+    Process input for what is plural and what is singular
+    '''
     global prev_output
     response = ['What are', AI_Input[4]+'?']
-    if AI_Input[0] == 'Who' and AI_Input[1] == 'has' and AI_Input[2] == 'the' and AI_Input[3] == 'most':
+    if AI_Input[0] == 'Who' and AI_Input[1] == 'has' and \
+       AI_Input[2] == 'the' and AI_Input[3] == 'most':
         response = checkHasMost(AI_Input[4])
     prev_output = response
     print_list(response)
 
-'''
+
 # A function that calls the appropriate functions according to the input and
 # determines what it is being told/asked
-'''
 def process_input(line):
     """ Inputs are of two categories. One category is a fact and of the form:
         1) X is a Y
@@ -1290,7 +1281,6 @@ def process_input(line):
     # allows us to change global variables
     global clarify_count
     global flag_confused
-    # Note: our process_input is incorrect since subjects can be 2 or more people
     if length == 4:  # checks line by length
         # resets confused counter in case the other AI was confused
         # on previous input
@@ -1337,10 +1327,10 @@ def process_input(line):
         clarify_counter = 0
         process_input2(input1)
 
-
+# the main function
 def main():
 
-    """ The main loop of your program. """
+    """ The main loop of the program. """
    
     global output # tells program to use global variable
     # start by give a fact
