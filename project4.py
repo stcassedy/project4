@@ -451,7 +451,7 @@ def checkWhoQuestion(is_are,a_an,word):
                     if(ct==0):
                         temp_result+=('')
                     else:
-                        temp_result+=( ', ' )
+                        temp_result+=( ',' )
                    
                     temp_result+=correct_answer.pop(0)
                     
