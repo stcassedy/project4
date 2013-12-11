@@ -481,21 +481,23 @@ def checkWhatQuestion(aThing):
     properties = None
     # variable to store our response to the what is X question
     response = []
+    values = None
+    # give one of the things that X is that hasn't be given yet
+    xIs = list()
     # if this person or thing is known
     if (aThing in individual) or (aThing in category):
         properties = KB[aThing]
+        # the first list in properties is what X is
+        values = properties[0]
     # if AI does not know what X is
-    if properties == None:
+    if properties == None or values == []:
         # we can have a 50% chance to say not sure or ask related question
         # if time permits
-        response = ['I', 'am', 'unsure']
+        response = ['I', 'am', 'unsure.']
     else:
         global fact_value
         global fact_key
-        # the first list in properties is what X is
-        values = properties[0]
-        # give one of the things that X is that hasn't be given yet
-        xIs = list()
+        
         # Check if we're giving facts about X, then update counter when
         # giving out the next fact
         keys = sorted(KB.keys())
@@ -569,7 +571,7 @@ def checkAreQuestion(aThing, inCategory):
     # If X is not in the database
     if properties == None:
         # 50% chance to say unsure or give related query/fact
-        response = ['I', 'am', 'unsure']
+        response = ['I', 'am', 'unsure.']
     else:
         # stores list of what X is
         values = properties[0]
@@ -578,7 +580,7 @@ def checkAreQuestion(aThing, inCategory):
             response = [aThing, 'are', inCategory]
         else:
             # 50% chance to say unsure or give related query/fact
-            response = ['I', 'am', 'unsure']
+            response = ['I', 'am', 'unsure.']
     return response
 
 
@@ -872,8 +874,20 @@ def clarify_confused():
     # Note answering what question doesn't give more than one answer
     # so it doesn't have to handle forms that have more than 1 Y at the moment
     if prev_output[1] == 'is' and (prev_output[2]=='a' or prev_output[2]=='an'):
-        # give the next fact (which is usually related)
-        giveFact()
+        # if the fact given had more than 1 object, give one object
+        if len(prev_output) > 4:
+            rand = 'a'
+            # picks one of the facts randomly
+            while rand == 'a' or rand == 'and':
+                num = random.randint(4,len(prev_output)-1)
+                rand = prev_output[num]
+            rand = remove_punc(rand)
+            response = [prev_output[0], prev_output[1], prev_output[2],rand+'.']
+            print_list(response)
+            prev_output = [prev_output[0], prev_output[1], prev_output[2],rand]
+        else:
+            # give the next fact (which is usually related)
+            giveFact()
     # if fact is of the form X are Ys
     elif prev_output[1] == 'are':
         line = prev_output[0].split()
