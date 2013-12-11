@@ -489,6 +489,31 @@ def checkWhoHas(number,item):
         return output
     else:
         return relatedAreQuestion(item)
+
+#A function that finds out 'How many OBJECT does NOUN have?'
+def checkHowMany(item,noun):
+    for name,things in Count.items():
+        if name == noun:
+            for x in things:
+                if x[1] == item:
+                    return[noun,'has', x[0], item]
+    return relatedAreQuestion(item)
+
+#A function that finds out 'Who has the most OBJECT?'
+def checkHasMost(item):
+    highest = -1
+    result = ''
+    for name,things in Count.items():
+        for x in things:
+            if x[1] == item and int(x[0]) > highest:
+                highest = int(x[0])
+                result = name
+    if result != '':
+        return [result,'has the most',item]
+    else:
+        return relatedAreQuestion(item)
+                    
+                    
     
 ########################################################
 
@@ -1185,7 +1210,7 @@ def process_input3(AI_Input):
 # process input for what is plural and what is singular
 def process_input6(AI_Input):
     global prev_output
-    response = ['What is a', AI_Input[5], '?']
+    response = ['What is a', AI_Input[5] + '?']
     if AI_Input[0] == 'what' or AI_Input[0] == 'What':
         if AI_Input[1] == 'is' and AI_Input[2] == 'the' and AI_Input[3] == 'plural' and AI_Input[4] == 'of':
             #look in the list of nouns to find the plural of the word
@@ -1197,12 +1222,26 @@ def process_input6(AI_Input):
         if AI_Input[1] == 'plural' and AI_Input[2] == 'of' and AI_Input[4] == 'is':
             update_plurals(AI_Input[3],AI_Input[5])
             response = ['What are', AI_Input[5]+'?']
+    # if input is of the form 'How many OBJECT does NOUN have?
+    elif AI_Input[0] == 'How' and AI_Input[1] == 'many' and AI_Input[3] == 'does' and AI_Input[5] == 'have':
+        response = checkHowMany(AI_Input[2],AI_Input[4])
     if AI_Input[0] == 'the' or AI_Input[0] == 'The':
         if AI_Input[1] == 'singular' and AI_Input[2] == 'of' and AI_Input[4] == 'is':
             update_plurals(AI_Input[5],AI_Input[3])
             response = ['What are', AI_Input[3]+'?']
     prev_output = response
     print_list(response)
+
+
+# process input for what is plural and what is singular
+def process_input5(AI_Input):
+    global prev_output
+    response = ['What are', AI_Input[4]+'?']
+    if AI_Input[0] == 'Who' and AI_Input[1] == 'has' and AI_Input[2] == 'the' and AI_Input[3] == 'most':
+        response = checkHasMost(AI_Input[4])
+    prev_output = response
+    print_list(response)
+
 
 # A function that calls the appropriate functions according to the input and
 # determines what it is being told/asked
@@ -1241,6 +1280,8 @@ def process_input(line):
     # if length of list is 6
     elif length == 6:
         process_input6(input1)
+    elif length == 5:
+        process_input5(input1)
     # if length of list is 3
     elif length == 3:
         # if input is "I am unsure"
