@@ -32,8 +32,9 @@ prev_output = []
 askedWhoQ=[]
 askedIsQ= []
 askedWhatQ= []
-#a_an="a/an" # it needs to be one or the other in the correct circumstance
 
+#check the who are question have multi answers
+multi_answer=False
 ################################################################################
 '''
 How the KB works so far:
@@ -402,19 +403,19 @@ def checkIsQuestion(name, a_an, aThing):
         
 
 
-  
- 
+
 
 ########################################################
 #reply for who question
 
 def checkWhoQuestion(is_are,a_an,word):
+    global multi_answer
     count=0
     ct=0
     output=[]
-    temp_result='';
     correct_answer=[]
     properties=[]
+    resultOfWhoAre='';
     for name, value in KB.items():
        
         #properties=value[0]
@@ -441,26 +442,29 @@ def checkWhoQuestion(is_are,a_an,word):
                 output= [correct_answer.pop(0)]
                 word2 = word+'.'
                 return [output[0],'is',a_an,word2]
-                
-            while(ct !=count):
-                if(ct == count-1):
-                    temp_result+=( ' and ' )
-                    temp_result+=correct_answer.pop(0)
-                   
-                
-                else:
-                    if(ct==0):
-                        temp_result+=('')
-                    else:
-                        temp_result+=( ',' )
-                   
-                    temp_result+=correct_answer.pop(0)
+            else:   
+                while(ct !=count):
+                    if(ct == count-1):
+                        resultOfWhoAre+=( ' and ' )
+                        resultOfWhoAre+=correct_answer.pop(0)
+                       
                     
-                ct+=1
+                    else:
+                        if(ct==0):
+                            resultOfWhoAre+=('')
+                        else:
+                            resultOfWhoAre+=( ',' )
+                       
+                        resultOfWhoAre+=correct_answer.pop(0)
+                        
+                    ct+=1
+                    
+                resultOfWhoAre+=' are '+ word+'s.'
+                multi_answer=True
+                print(resultOfWhoAre)
                 
-            temp_result+=' are '+ word+'s.'
-            output=temp_result.split(',')
-            return  output  
+                response=resultOfWhoAre.split(',')
+                return response  
 # if kb doesn't have the fact, ask a related query
     if(output==[]):
        # 50/50 chance to ask question or reply i am unsure
@@ -469,6 +473,8 @@ def checkWhoQuestion(is_are,a_an,word):
             return relatedToWhoQuestion(a_an,word)
        else:
             return ['I', 'am', 'unsure']
+       
+ 
        
  
 ########################################################
@@ -1143,7 +1149,9 @@ def process_input4(AI_Input):
 # A function that handles inputs of length 3
 def process_input3(AI_Input):
     global prev_output
+    global multi_answer
     response = []
+    
     # if input is of the form what is/are X
     if AI_Input[0] == 'What':
         # if form is what is X
@@ -1161,7 +1169,9 @@ def process_input3(AI_Input):
     elif AI_Input[0] == 'Who' and AI_Input[1] == 'are':
         # convert X to a singular
         singular = convert([AI_Input[2]], 'P')
+        # for the x,y,z and k are Things case
         response = checkWhoQuestion(AI_Input[1],'',singular[0])
+     
     # if input is of the form are X Ys
     elif AI_Input[0] == 'Are':
         response = checkAreQuestion(AI_Input[1], AI_Input[2])
@@ -1178,7 +1188,11 @@ def process_input3(AI_Input):
     else:
         response = ['I', 'am', 'confused.']
     # print response to other AI
-    print_list(response)
+   
+    if multi_answer:
+        multi_answer=False      
+    else:
+        print_list(response)
     response[len(response)-1] = remove_punc(response[len(response)-1])
     prev_output = response
 
