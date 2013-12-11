@@ -300,11 +300,12 @@ def update_KB_poss(thing,poss):
 # ------------------------------------------------------------------------------
 # General all purpose helper functions that help with all functions.
 # ------------------------------------------------------------------------------
-
+'''
 # a helper function that converts a list of nouns to its counter-part
 # inType is if the nounList is plural 'P' or singular 'S'
 # if it doesn't know the plural it will add an S
 # if it doesn't know the singular it will remove the last letter
+'''
 def convert(nounList, inType):
     if inType == 'S':
         index = 1
@@ -334,7 +335,7 @@ def convert(nounList, inType):
     # return the list
     return c_list
 
-# A function that prints a list to std.out
+''' A function that prints a list to std.out'''
 def print_list(inList):
     for index in range(0, len(inList)):
         if index == len(inList)-1:
@@ -342,7 +343,7 @@ def print_list(inList):
         else:
             print(inList[index], end =" ")
 
-# A function that removes punctuation marks
+''' A function that removes punctuation marks'''
 def remove_punc(word):
     newWord = word
     for index in range(0,len(word)):
@@ -356,7 +357,7 @@ def remove_punc(word):
 
 
 
-
+'''
 # ------------------------------------------------------------------------------
 # These functions deal with inference and answering questions.
 # If an answer is not known, then the AI can ask a question related to the
@@ -364,21 +365,12 @@ def remove_punc(word):
 # if it does not know, it can look through the database and pick a random
 # person or thing) or it can respond with "I am not sure"
 # ------------------------------------------------------------------------------
+'''
 
 ###########################################################
 
-'''
-def pickRandomRelatedQuestion(){
-    rand= random.randint(0,3)
-    if(rand==0): relatedToIsQuestion(x_value, y_value):
-    if(rand==1):relatedToIsQuestion()
-    if(rand==2):relatedToIsQuestion()
-    if(rand==3):relatedToIsQuestion()
 
-    }
-    '''
-#reply for isQuestion 
-
+'''reply for isQuestion '''
 def checkIsQuestion(name, a_an, aThing):
     
     check=False
@@ -406,7 +398,7 @@ def checkIsQuestion(name, a_an, aThing):
 
 
 ########################################################
-#reply for who question
+'''reply for who question'''
 
 def checkWhoQuestion(is_are,a_an,word):
     global multi_answer
@@ -478,7 +470,8 @@ def checkWhoQuestion(is_are,a_an,word):
        
  
 ########################################################
-#A function that finds out "Who has X objects"
+        
+'''A function that finds out "Who has X objects"'''
 def checkWhoHas(number,item):
     result = []
     output = []
@@ -496,7 +489,7 @@ def checkWhoHas(number,item):
     else:
         return relatedAreQuestion(item)
 
-#A function that finds out 'How many OBJECT does NOUN have?'
+'''A function that finds out 'How many OBJECT does NOUN have?'''
 def checkHowMany(item,noun):
     for name,things in Count.items():
         if name == noun:
@@ -505,7 +498,7 @@ def checkHowMany(item,noun):
                     return[noun,'has', x[0], item]
     return relatedAreQuestion(item)
 
-#A function that finds out 'Who has the most OBJECT?'
+'''A function that finds out 'Who has the most OBJECT?'''
 def checkHasMost(item):
     highest = -1
     result = ''
@@ -522,10 +515,11 @@ def checkHasMost(item):
                     
     
 ########################################################
-
+'''
 # A function that answers questions of the form "what is/are X"
 # This function only returns one thing (rather than multiple)
 # Need to implement this when time permits
+'''
 def checkWhatQuestion(aThing):
     # variable to hold the properties of aThing
     properties = None
@@ -607,7 +601,7 @@ def checkWhatQuestion(aThing):
                         xIs.append(plural[0]+',')
     return response+xIs
 
-# A function that answers questions of the form "Are X Y"
+''' A function that answers questions of the form "Are X Y" '''
 def checkAreQuestion(aThing, inCategory):
     # stores the response in a variable
     response = []
@@ -639,7 +633,7 @@ def checkAreQuestion(aThing, inCategory):
 # ------------------------------------------------------------------------------
 # These functions deal with asking questions
 # ------------------------------------------------------------------------------
-
+'''
 ############ related is-question ###################
 # A function that asks a related question to is X a/an Y
 # The AI will ask for clarification if it doesnt know.
@@ -648,7 +642,7 @@ def checkAreQuestion(aThing, inCategory):
 
 # note if recieving fact is should ask a follow up question
 # like who is a Y (which it does not)
-
+'''
 def relatedToIsQuestion(x_value,a_an, y_value):
     rand= random.randint(0,1)
     if(rand==0):
@@ -668,11 +662,12 @@ def relatedToIsQuestion(x_value,a_an, y_value):
             #askedWhoQ.append(y_value)
             return ['Who','is',a_an, word]
             
-            
+'''            
 ############related who-questions##########
 # A function that asks a related question to "who is a/an Y"
 # The AI will take a guess, so it will ask "is X a/an Y"
 # where X is a randomly chosen specific person or thing
+'''
 
 def relatedToWhoQuestion(a_an,a_object): 
     rand= random.randint(0,len(individual)-1)
@@ -699,10 +694,11 @@ def relatedToWhoQuestion(a_an,a_object):
     return ['Is', rand_name, 'a',word]
     askedIsQ.append(currQuest)
 
-
+'''
 # A function that asks a related question to "what is X"
 # The AI will take a guess, so it will ask "is X a Y?"
 # where Y is random chosen higher category than X
+'''
 def relatedWhatQuestion(aThing):
     rand= random.randint(0,len(category)-1)
    
@@ -726,7 +722,7 @@ def relatedWhatQuestion(aThing):
     word = aThing+'?'
     return ['Is', rand_name, 'a/an',word]
     askedIsQ.append(currQuest)
-    
+'''    
 # A function that asks a related question to "are X Ys"
 # or if it recieves a fact of the form X are Ys
 
@@ -750,6 +746,7 @@ def relatedAreQuestion(aThing2):
 
 # A function that takes a guess as to what aThing could be
 # this returns a related query
+'''
 def guessAreQuestion(aThing):
     # get the keys
     keys = list(KB.keys())
@@ -776,8 +773,9 @@ def guessAreQuestion(aThing):
 # If a fact is already known, the AI will either give a new fact or query with
 # an equal chance of either one happening.
 # ------------------------------------------------------------------------------
-
+'''
 # gives a fact that the AI knows
+'''
 def giveFact():
     global fact_value
     global fact_key
@@ -829,11 +827,12 @@ def giveFact():
         # if at the end of DB
         if fact_key > len(keys)-1:
             fact_key = 0 # start from very beginning
-
+'''
 # This function stores a fact of the form Xs are Ys
 # This function is needed because X and Y are plural
 # subClass is the lower class (I.E dogs)
 # superClass is the general category (I.E animal)
+'''
 def addFactAre(subClass, superClass):
     # change subClass and superClass into singular nouns
     # >>>NOTE: need to catch adjectives somehow!
@@ -845,11 +844,12 @@ def addFactAre(subClass, superClass):
     plural = convert([singList[1]], 'S')
     return relatedAreQuestion(plural[0])
 
-
+'''
 # This function stores fact of the form X is a Y
 # This function is needed because Y is singular
 # subClass is the lower class (I.E fido)
 # superClass is the more general category (I.E Dog in this case)
+'''
 def addFactIs(person, superClass):
     # call helper function to add fact into database, no change needed
     inserted = update_KB_is(person, superClass)
@@ -869,7 +869,7 @@ def addFactIs(person, superClass):
 
 
 
-# update the number Knowledge Base
+''' update the number Knowledge Base'''
 def addCount(noun,number,item):
     added = False
     for name,things in Count.items():
@@ -918,8 +918,10 @@ def addCount(noun,number,item):
 # Note: Might need to fix if previous outputs subjects have more than 1 person
 # ------------------------------------------------------------------------------
 
+'''
 # this function attempts to clarify by outputing related another fact
 # when the other AI is confused after hearing a fact. it gives up after 3 tries
+'''
 def clarify_confused():
     global clarify_count
     global prev_output
@@ -965,9 +967,10 @@ def clarify_confused():
     clarify_count += 1 # increment try counter
 
 
-
+'''
 # this function attempts to clarify by outputing another related query
 # when the other AI is confused after hearing a fact. it gives up after 3 tries
+'''
 def clarify_unsure():
     # gives us permission to change global variable
     global clarify_count
@@ -1033,7 +1036,7 @@ def clarify_unsure():
 
 
 
-
+'''
 # ------------------------------------------------------------------------------
 # Main function and helper functions that help parse the input
 # ------------------------------------------------------------------------------
@@ -1043,6 +1046,7 @@ def clarify_unsure():
 # people is a list of people or things with names
 # categories are the general categories of things (I.E. dog)
 # this is for inputs of the form X is a Y and Z (or Y, Z, and V (etc))
+'''
 def parseIs(line, people, categories):
     # there should only be one subject
     people.append(line[0])
@@ -1061,12 +1065,13 @@ def parseIs(line, people, categories):
             # removed the comma if it contains it
             word = remove_punc(line[index])
             categories.append(word)
-
+'''
 # a function that parses the the line and stores the nouns/people/things
 # into a list that is passed by a parameter.
 # people is a list of people or things with names
 # categories are the general categories of things (I.E. dog)
 # this is for inputs of the form X is a Y and Z (or Y, Z, and V (etc))
+'''
 def parseAre(line, people, categories):
     # stores all the people into the list of people
     for index in range(0,len(line)-1):
@@ -1082,13 +1087,14 @@ def parseAre(line, people, categories):
     # stores the category into the list
     categories.append(line[len(line)-1])
     
-
+'''
 # A function that process the input depending on new restrictions
 # If the program reaches here then either malformed input was recieved
 # or input with more than one subject was recieved
 # breaks on trick inputs (I.E using is/a/and/are as names will cause confusion)
 # Example form:  Josh is a student and a TA
 # Example Form2: Josh and Emily are TAs
+'''
 def process_input2(line):
     people = []
     categories = []
@@ -1134,8 +1140,9 @@ def process_input2(line):
     query[len(query)-1] = remove_punc(query[len(query)-1])
     prev_output = query
                 
-
-# A function that handles inputs of length 4
+'''
+ A function that handles inputs of length 4
+'''
 def process_input4(AI_Input):
     global prev_output
     response = []
@@ -1171,7 +1178,7 @@ def process_input4(AI_Input):
     response[len(response)-1] = remove_punc(response[len(response)-1])
     prev_output = response
 
-# A function that handles inputs of length 3
+''' A function that handles inputs of length 3'''
 def process_input3(AI_Input):
     global prev_output
     global multi_answer
@@ -1221,7 +1228,7 @@ def process_input3(AI_Input):
     response[len(response)-1] = remove_punc(response[len(response)-1])
     prev_output = response
 
-# process input for what is plural and what is singular
+''' process input for what is plural and what is singular '''
 def process_input6(AI_Input):
     global prev_output
     response = ['What is a', AI_Input[5] + '?']
@@ -1247,7 +1254,7 @@ def process_input6(AI_Input):
     print_list(response)
 
 
-# process input for what is plural and what is singular
+''' process input for what is plural and what is singular '''
 def process_input5(AI_Input):
     global prev_output
     response = ['What are', AI_Input[4]+'?']
@@ -1256,9 +1263,10 @@ def process_input5(AI_Input):
     prev_output = response
     print_list(response)
 
-
+'''
 # A function that calls the appropriate functions according to the input and
 # determines what it is being told/asked
+'''
 def process_input(line):
     """ Inputs are of two categories. One category is a fact and of the form:
         1) X is a Y
@@ -1329,7 +1337,7 @@ def process_input(line):
         clarify_counter = 0
         process_input2(input1)
 
-# the main function
+
 def main():
 
     """ The main loop of your program. """
