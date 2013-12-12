@@ -75,7 +75,7 @@ nouns = [['human','humans'],['animal','animals'],['wizard','wizards'],
            ['wookie','wookies'],['ottsel','ottsels'],['alien','aliens'],
            ['mammal','mammals'],['idiot','idiots'],['dog','dogs'],
            ['cat','cats'], ['food','food'], ['fox','foxes'], ['foot','feet'],
-         ['man','men'], ['woman','women'] ['person','people']]
+         ['man','men'], ['woman','women'] ,['person','people']]
 
 #list of adjectives
 Adjectives = []
