@@ -74,7 +74,8 @@ category = ['human','animal','wizard','wookie','ottsel',
 nouns = [['human','humans'],['animal','animals'],['wizard','wizards'],
            ['wookie','wookies'],['ottsel','ottsels'],['alien','aliens'],
            ['mammal','mammals'],['idiot','idiots'],['dog','dogs'],
-           ['cat','cats']]
+           ['cat','cats'], ['food','food'], ['fox','foxes'], ['foot','feet'],
+         ['man','men'], ['woman','women'] ['person','people']]
 
 #list of adjectives
 Adjectives = []
@@ -836,7 +837,7 @@ def addFactIs(person, superClass):
     subClass is the lower class (I.E fido)
     superClass is the more general category (I.E Dog in this case)
     '''
-    # call helper function to add fact into database, no change needed
+    # call helper function to add fact into database
     inserted = update_KB_is(person, superClass)
     update_names(person)
     for x in nouns:
@@ -968,7 +969,7 @@ def clarify_unsure():
     # If other AI is unsure what is/are X, our AI will answer the question
     elif prev_output[0]=='What'and(prev_output[1]=='is'or prev_output[1]=='are'):
         # answer the question
-        answer = checkWhatQuestion(prev_output[2])
+        answer = checkWhatQuestion(prev_output[2], None)
         # if no answer was found
         if answer[0] == 'I' and answer[1] == 'am' and answer[2] == 'unsure':
             answer = guessAreQuestion(prev_output[2])
@@ -1177,7 +1178,7 @@ def process_input3(AI_Input):
         elif AI_Input[1] == 'are':
             # switch from plural to singular
             singular = convert([AI_Input[2]], 'P')
-            response = checkWhatQuestion(singular[0])
+            response = checkWhatQuestion(singular[0], None)
         # form is malformed
         else:
             response = ['I', 'am', 'confused.']
